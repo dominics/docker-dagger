@@ -4,7 +4,6 @@ services:
   traefik:
     image: traefik
     command: --api --docker
-    network_mode: "host"
     ports:
       - "80:80"
       - "8080:8080"
@@ -13,20 +12,41 @@ services:
 
   whoami:
     image: emilevauge/whoami
-    network_mode: "host"
 
   sonarr:
     image: linuxserver/sonarr
-    network_mode: "host"
     ports:
       - "8989:8989"
     volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ${APP_DATA}/sonarr:/config
-      -
+      - ${CONFIG_DIR:?Need to set CONFIG_DIR}/sonarr:/config
+      - ${STORAGE_DIR:?Need to set STORAGE_DIR}/tv:/tv
+      - ${STORAGE_DIR}/downloads:/downloads
 
   radarr:
+    image: linuxserver/radarr
+    ports:
+      - "7878:7878"
+    volumes:
+      - ${CONFIG_DIR:}/radarr:/config
+      - ${STORAGE_DIR}/movies:/movies
+      - ${STORAGE_DIR}/downloads:/downloads
 
   plex:
+    image: linuxserver/plex
+    network_mode: "host"
+    volumes:
+      - ${CONFIG_DIR:}/plex:/config
+      - ${STORAGE_DIR}/movies:/data/movies
+      - ${STORAGE_DIR}/tv:/data/tv
+      - ${STORAGE_DIR}/transcode:/transcode
+    environment:
+      VERSION: latest
 
   nzbget:
+    image: linuxserver/nzbget
+    ports:
+      - "7878:7878"
+    volumes:
+      - ${CONFIG_DIR:}/nzbget:/config
+      - ${STORAGE_DIR}/downloads:/downloads
+      - ${STORAGE_DIR}/intermediate:/intermediate
