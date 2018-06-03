@@ -6,12 +6,15 @@ services:
     command: --api --docker
     ports:
       - "80:80"
+      - "443:443"
       - "8080:8080"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
 
   whoami:
     image: emilevauge/whoami
+    labels:
+      traefik.enable: "true"
 
   sonarr:
     image: linuxserver/sonarr
@@ -21,6 +24,8 @@ services:
       - ${CONFIG_DIR:?Need to set CONFIG_DIR}/sonarr:/config
       - ${STORAGE_DIR:?Need to set STORAGE_DIR}/tv:/tv
       - ${STORAGE_DIR}/downloads:/downloads
+    labels:
+      traefik.enable: "true"
 
   radarr:
     image: linuxserver/radarr
@@ -30,6 +35,8 @@ services:
       - ${CONFIG_DIR}/radarr:/config
       - ${STORAGE_DIR}/movies:/movies
       - ${STORAGE_DIR}/downloads:/downloads
+    labels:
+      traefik.enable: "true"
 
   plex:
     image: linuxserver/plex
@@ -41,6 +48,8 @@ services:
       - ${STORAGE_DIR}/transcode:/transcode
     environment:
       VERSION: latest
+    labels:
+      traefik.enable: "true"
 
   nzbget:
     image: linuxserver/nzbget
@@ -50,3 +59,5 @@ services:
       - ${CONFIG_DIR}/nzbget:/config
       - ${STORAGE_DIR}/downloads:/downloads
       - ${STORAGE_DIR}/intermediate:/intermediate
+    labels:
+      traefik.enable: "true"
