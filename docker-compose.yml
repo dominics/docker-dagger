@@ -26,6 +26,9 @@ services:
       - ${CONFIG_DIR:?Need to set CONFIG_DIR}/sonarr:/config
       - ${STORAGE_DIR:?Need to set STORAGE_DIR}/tv:/tv
       - ${STORAGE_DIR}/downloads:/downloads
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
     labels:
       traefik.enable: "true"
 
@@ -37,6 +40,9 @@ services:
       - ${CONFIG_DIR}/radarr:/config
       - ${STORAGE_DIR}/movies:/movies
       - ${STORAGE_DIR}/downloads:/downloads
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
     labels:
       traefik.enable: "true"
 
@@ -50,6 +56,8 @@ services:
       - ${STORAGE_DIR}/transcode:/transcode
     environment:
       VERSION: latest
+      PUID: ${PUID}
+      PGID: ${PGID}
     labels:
       traefik.enable: "true"
 
@@ -61,5 +69,8 @@ services:
       - ${CONFIG_DIR}/nzbget:/config
       - ${STORAGE_DIR}/downloads:/downloads
       - ${STORAGE_DIR}/intermediate:/intermediate
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
     labels:
       traefik.enable: "true"
