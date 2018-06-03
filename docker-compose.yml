@@ -27,7 +27,7 @@ services:
     ports:
       - "7878:7878"
     volumes:
-      - ${CONFIG_DIR:}/radarr:/config
+      - ${CONFIG_DIR}/radarr:/config
       - ${STORAGE_DIR}/movies:/movies
       - ${STORAGE_DIR}/downloads:/downloads
 
