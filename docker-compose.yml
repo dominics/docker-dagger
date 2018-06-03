@@ -45,7 +45,7 @@ services:
   nzbget:
     image: linuxserver/nzbget
     ports:
-      - "7878:7878"
+      - "6789:6789"
     volumes:
       - ${CONFIG_DIR:}/nzbget:/config
       - ${STORAGE_DIR}/downloads:/downloads
