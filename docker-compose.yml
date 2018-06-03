@@ -1,1 +1,32 @@
 version: '2.4'
+
+services:
+  traefik:
+    image: traefik
+    command: --api --docker
+    network_mode: "host"
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  whoami:
+    image: emilevauge/whoami
+    network_mode: "host"
+
+  sonarr:
+    image: linuxserver/sonarr
+    network_mode: "host"
+    ports:
+      - "8989:8989"
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${APP_DATA}/sonarr:/config
+      -
+
+  radarr:
+
+  plex:
+
+  nzbget:
