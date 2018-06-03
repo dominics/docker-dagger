@@ -27,7 +27,7 @@ services:
     ports:
       - "7878:7878"
     volumes:
-      - ${CONFIG_DIR:}/radarr:/config
+      - ${CONFIG_DIR}/radarr:/config
       - ${STORAGE_DIR}/movies:/movies
       - ${STORAGE_DIR}/downloads:/downloads
 
@@ -35,7 +35,7 @@ services:
     image: linuxserver/plex
     network_mode: "host"
     volumes:
-      - ${CONFIG_DIR:}/plex:/config
+      - ${CONFIG_DIR}/plex:/config
       - ${STORAGE_DIR}/movies:/data/movies
       - ${STORAGE_DIR}/tv:/data/tv
       - ${STORAGE_DIR}/transcode:/transcode
@@ -47,6 +47,6 @@ services:
     ports:
       - "6789:6789"
     volumes:
-      - ${CONFIG_DIR:}/nzbget:/config
+      - ${CONFIG_DIR}/nzbget:/config
       - ${STORAGE_DIR}/downloads:/downloads
       - ${STORAGE_DIR}/intermediate:/intermediate
