@@ -7,8 +7,7 @@ if ! hash minica > /dev/null 2>&1; then
     go get github.com/jsha/minica
 fi
 
-minica --domains *.media.varspool.com
+minica --domains '*.media.varspool.com'
 
-chmod ugo+rwX *.media.varspool.com # dir
-chmod ugo+rw *.media.varspool.com/cert.pem
-chmod ugo+rw minica.pem
+chmod u=rwX,go=rX '*.media.varspool.com'
+chmod u=rw,go=r '*.media.varspool.com/cert.pem' minica.pem
