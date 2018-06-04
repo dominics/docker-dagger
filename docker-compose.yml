@@ -2,7 +2,7 @@ version: '2.4'
 
 services:
   traefik:
-    image: traefik
+    image: traefik:1.6
     command: --api --docker
     ports:
       - "80:80"
@@ -18,7 +18,7 @@ services:
   whoami:
     image: emilevauge/whoami
     labels:
-      traefik.frontend.rule: Host:whoami.media.varspool.com;Host:whoami.home.varspool.com
+      traefik.frontend.rule: Host:whoami.media.varspool.com
 
   sonarr:
     image: linuxserver/sonarr
@@ -32,7 +32,7 @@ services:
       PUID: ${PUID}
       PGID: ${PGID}
     labels:
-      traefik.frontend.rule: Host:sonarr.media.varspool.com;Host:sonarr.home.varspool.com
+      traefik.frontend.rule: Host:sonarr.media.varspool.com
 
   radarr:
     image: linuxserver/radarr
@@ -46,7 +46,7 @@ services:
       PUID: ${PUID}
       PGID: ${PGID}
     labels:
-      traefik.frontend.rule: Host:radarr.media.varspool.com;Host:radarr.home.varspool.com
+      traefik.frontend.rule: Host:radarr.media.varspool.com
 
   plex:
     image: linuxserver/plex
@@ -61,7 +61,7 @@ services:
       PUID: ${PUID}
       PGID: ${PGID}
     labels:
-      traefik.frontend.rule: Host:plex.media.varspool.com;Host:plex.home.varspool.com
+      traefik.frontend.rule: Host:plex.media.varspool.com
 
   nzbget:
     image: linuxserver/nzbget
@@ -75,4 +75,4 @@ services:
       PUID: ${PUID}
       PGID: ${PGID}
     labels:
-      traefik.frontend.rule: Host:nzbget.media.varspool.com;Host:nzbget.home.varspool.com
+      traefik.frontend.rule: Host:nzbget.media.varspool.com
