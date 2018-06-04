@@ -60,13 +60,15 @@ services:
       - ${STORAGE_DIR}/movies:/data/movies
       - ${STORAGE_DIR}/tv:/data/tv
       - ${STORAGE_DIR}/transcode:/transcode
+      - /dev/dri:/dev/dri
     environment:
       VERSION: latest
       PUID: ${PUID}
       PGID: ${PGID}
     labels:
       traefik.frontend.rule: Host:plex.media.varspool.com
-      traefik.port:          ${LOCAL_IP?:}:32400
+      traefik.port:          32400
+      traefik.backend.host:  ${LOCAL_IP?:}
 
   nzbget:
     image: linuxserver/nzbget
