@@ -7,7 +7,7 @@ dashboard = true
 
 [docker]
 domain = "media.varspool.com"
-watch = true
+watch  = true
 
 [retry]
 
@@ -20,5 +20,5 @@ watch = true
     address = ":443"
     [entryPoints.https.tls]
       [[entryPoints.https.tls.certificates]]
-      certFile = "/etc/traefik/ssl/star.media.varspool.com.cert"
-      keyFile = "/etc/traefik/ssl/star.media.varspool.com.key"
+      certFile = "/etc/traefik/ssl/*.media.varspool.com/cert.pem"
+      keyFile  = "/etc/traefik/ssl/*.media.varspool.com/key.pem"
