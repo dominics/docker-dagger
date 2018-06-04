@@ -14,6 +14,7 @@ services:
       - ./ssl:/etc/traefik/ssl
     labels:
       traefik.frontend.rule: Host:traefik.media.varspool.com
+      traefik.port:          8080
 
   whoami:
     image: emilevauge/whoami
