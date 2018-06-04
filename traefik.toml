@@ -22,13 +22,3 @@ watch = true
       [[entryPoints.https.tls.certificates]]
       certFile = "/etc/traefik/ssl/star.media.varspool.com.cert"
       keyFile = "/etc/traefik/ssl/star.media.varspool.com.key"
-
-[acme]
-email = "dominic@varspool.com"
-storage = "acme.json"
-caServer = "https://acme-staging-v02.api.letsencrypt.org/directory"
-entryPoint = "https"
-onHostRule = true
-
-[acme.httpChallenge]
-entryPoint = "http"

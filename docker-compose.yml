@@ -20,6 +20,13 @@ services:
     labels:
       traefik.frontend.rule: Host:whoami.media.varspool.com
 
+  ca:
+    image: nginx
+    volumes:
+      - ./ssl/minica.pem:/usr/share/nginx/html/ca.pem:ro
+    labels:
+      traefik.frontend.rule: Host:ca.media.varspool.com
+
   sonarr:
     image: linuxserver/sonarr
     ports:
