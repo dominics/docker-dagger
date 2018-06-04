@@ -20,3 +20,10 @@ watch  = true
       [[entryPoints.https.tls.certificates]]
       certFile = "/etc/traefik/ssl/*.media.varspool.com/cert.pem"
       keyFile  = "/etc/traefik/ssl/*.media.varspool.com/key.pem"
+
+[backends]
+  [backends.plex]
+    [backends.plex.servers]
+      [backends.plex.servers.server0]
+        url = "http://192.168.1.200:32400"
+        weight = 99
