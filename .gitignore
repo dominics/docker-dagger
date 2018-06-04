@@ -1,2 +1,4 @@
 docker-compose.override.yml
 acme.json
+ca/*
+!ca/generate

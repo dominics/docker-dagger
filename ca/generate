@@ -1,0 +1,10 @@
+#!/bin/bash
+
+set -euo pipefail
+set -x
+
+if ! hash minica > /dev/null 2>&1; then
+    go get github.com/jsha/minica
+fi
+
+minica --domains *.media.varspool.com
