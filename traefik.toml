@@ -10,6 +10,7 @@
 [docker]
 domain = "home.varspool.com"
 watch = true
+exposeByDefault = true
 
 [acme]
 email = "dominic@varspool.com"
