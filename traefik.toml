@@ -17,8 +17,11 @@ watch = true
     [entryPoints.http.redirect]
     entryPoint = "https"
   [entryPoints.https]
-  address = ":443"
-  [entryPoints.https.tls]
+    address = ":443"
+    [entryPoints.https.tls]
+      [[entryPoints.https.tls.certificates]]
+      certFile = "/etc/traefik/ssl/star.media.varspool.com.cert"
+      keyFile = "/etc/traefik/ssl/star.media.varspool.com.key"
 
 [acme]
 email = "dominic@varspool.com"
