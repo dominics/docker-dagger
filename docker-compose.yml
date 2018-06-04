@@ -23,7 +23,8 @@ services:
   ca:
     image: nginx
     volumes:
-      - ./ssl/minica.pem:/usr/share/nginx/html/ca.pem:ro
+      - ./ssl/minica.pem:/usr/share/nginx/html/media-server-ca.crt:ro
+      - ./ssl/index.html:/usr/share/nginx/html/index.html:ro
     labels:
       traefik.frontend.rule: Host:ca.media.varspool.com
 
