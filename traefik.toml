@@ -24,8 +24,8 @@ watch  = true
 [file]
 
 [backends]
-  [backends.plex]
-    [backends.plex.servers]
-      [backends.plex.servers.server0]
+  [backends.backend-plex]
+    [backends.backend-plex.servers]
+      [backends.backend-plex.servers.server0]
         url = "http://192.168.1.200:32400"
         weight = 99
