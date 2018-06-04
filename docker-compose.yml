@@ -13,7 +13,7 @@ services:
       - ./traefik.toml:/etc/traefik/traefik.toml
       - ./ssl:/etc/traefik/ssl
     labels:
-       traefik.enabled: false
+      traefik.frontend.rule: Host:traefik.media.varspool.com
 
   whoami:
     image: emilevauge/whoami
