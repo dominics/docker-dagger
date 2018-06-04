@@ -16,11 +16,6 @@ services:
       traefik.frontend.rule: Host:traefik.media.varspool.com
       traefik.port:          8080
 
-  whoami:
-    image: emilevauge/whoami
-    labels:
-      traefik.frontend.rule: Host:whoami.media.varspool.com
-
   ca:
     image: nginx
     volumes:
