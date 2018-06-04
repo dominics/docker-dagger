@@ -3,21 +3,22 @@ version: '2.4'
 services:
   traefik:
     image: traefik
-    command: --api --docker -c /traefik.toml
+    command: --api --docker
     ports:
       - "80:80"
       - "443:443"
       - "8080:8080"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - ./traefik.toml:/traefik.toml
+      - ./traefik.toml:/etc/traefik/traefik.toml
       - ./acme.json:/acme.json
-    container_name: traefik
+    labels:
+       traefik.enabled: false
 
   whoami:
     image: emilevauge/whoami
     labels:
-      traefik.frontend.rule: Host:whoami.media.varspool.com
+      traefik.frontend.rule: Host:whoami.media.varspool.com;Host:whoami.home.varspool.com
 
   sonarr:
     image: linuxserver/sonarr
@@ -31,7 +32,7 @@ services:
       PUID: ${PUID}
       PGID: ${PGID}
     labels:
-      traefik.frontend.rule: Host:sonarr.media.varspool.com
+      traefik.frontend.rule: Host:sonarr.media.varspool.com;Host:sonarr.home.varspool.com
 
   radarr:
     image: linuxserver/radarr
@@ -45,7 +46,7 @@ services:
       PUID: ${PUID}
       PGID: ${PGID}
     labels:
-      traefik.frontend.rule: Host:radarr.media.varspool.com
+      traefik.frontend.rule: Host:radarr.media.varspool.com;Host:radarr.home.varspool.com
 
   plex:
     image: linuxserver/plex
@@ -60,7 +61,7 @@ services:
       PUID: ${PUID}
       PGID: ${PGID}
     labels:
-      traefik.frontend.rule: Host:plex.media.varspool.com
+      traefik.frontend.rule: Host:plex.media.varspool.com;Host:plex.home.varspool.com
 
   nzbget:
     image: linuxserver/nzbget
@@ -74,4 +75,4 @@ services:
       PUID: ${PUID}
       PGID: ${PGID}
     labels:
-      traefik.frontend.rule: Host:nzbget.media.varspool.com
+      traefik.frontend.rule: Host:nzbget.media.varspool.com;Host:nzbget.home.varspool.com

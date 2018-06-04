@@ -1,20 +1,30 @@
-#[entryPoints]
-#  [entryPoints.http]
-#  address = ":80"
-#    [entryPoints.http.redirect]
-#    entryPoint = "https"
-#  [entryPoints.https]
-#  address = ":443"
-#  [entryPoints.https.tls]
-
 debug = true
+defaultEntryPoints = ["http", "https"]
+
+[api]
+dashboard = true
 
 [docker]
-domain = "varspool.com"
+domain = "media.varspool.com"
 watch = true
 
-#[acme]
-#email = "dominic@varspool.com"
-#storage = "acme.json"
-#caServer = "https://acme-staging-v02.api.letsencrypt.org/directory"
-#entryPoint = "https"
+[retry]
+
+[entryPoints]
+  [entryPoints.http]
+  address = ":80"
+    [entryPoints.http.redirect]
+    entryPoint = "https"
+  [entryPoints.https]
+  address = ":443"
+  [entryPoints.https.tls]
+
+[acme]
+email = "dominic@varspool.com"
+storage = "acme.json"
+caServer = "https://acme-staging-v02.api.letsencrypt.org/directory"
+entryPoint = "https"
+onHostRule = true
+
+[acme.httpChallenge]
+entryPoint = "http"
