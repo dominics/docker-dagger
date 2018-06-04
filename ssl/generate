@@ -10,5 +10,5 @@ fi
 minica --domains *.media.varspool.com
 
 chmod ugo+rwX *.media.varspool.com # dir
-chmod ufo+rw *.media.varspool.com/cert.pem
+chmod ugo+rw *.media.varspool.com/cert.pem
 chmod ugo+rw minica.pem
