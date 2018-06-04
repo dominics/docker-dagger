@@ -6,7 +6,7 @@ defaultEntryPoints = ["http", "https"]
 dashboard = true
 
 [docker]
-domain = "media.varspool.com"
+Domain = "media.varspool.com"
 watch  = true
 
 [retry]
