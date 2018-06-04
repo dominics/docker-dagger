@@ -16,7 +16,7 @@ services:
   whoami:
     image: emilevauge/whoami
     labels:
-      traefik.enable: "true"
+      traefik.frontend.rule: Host:whoami.media
 
   sonarr:
     image: linuxserver/sonarr
@@ -30,7 +30,7 @@ services:
       PUID: ${PUID}
       PGID: ${PGID}
     labels:
-      traefik.enable: "true"
+      traefik.frontend.rule: Host:sonarr.media
 
   radarr:
     image: linuxserver/radarr
@@ -44,7 +44,7 @@ services:
       PUID: ${PUID}
       PGID: ${PGID}
     labels:
-      traefik.enable: "true"
+      traefik.frontend.rule: Host:radarr.media
 
   plex:
     image: linuxserver/plex
@@ -59,7 +59,7 @@ services:
       PUID: ${PUID}
       PGID: ${PGID}
     labels:
-      traefik.enable: "true"
+      traefik.frontend.rule: Host:plex.media
 
   nzbget:
     image: linuxserver/nzbget
@@ -73,4 +73,4 @@ services:
       PUID: ${PUID}
       PGID: ${PGID}
     labels:
-      traefik.enable: "true"
+      traefik.frontend.rule: Host:nzbget.media

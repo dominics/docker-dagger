@@ -10,8 +10,8 @@
 debug = true
 
 [docker]
-domain = "home.varspool.com"
-watch = true
+  domain = "media"
+  watch = true
 
 #[acme]
 #email = "dominic@varspool.com"
