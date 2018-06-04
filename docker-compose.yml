@@ -68,7 +68,7 @@ services:
     labels:
       traefik.frontend.rule: Host:plex.media.varspool.com
       traefik.port:          32400
-      traefik.backend.host:  ${LOCAL_IP?:}
+      traefik.backend:       plex
 
   nzbget:
     image: linuxserver/nzbget
