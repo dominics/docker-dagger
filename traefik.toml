@@ -21,6 +21,8 @@ watch  = true
       certFile = "/etc/traefik/ssl/*.media.varspool.com/cert.pem"
       keyFile  = "/etc/traefik/ssl/*.media.varspool.com/key.pem"
 
+[file]
+
 [backends]
   [backends.plex]
     [backends.plex.servers]
