@@ -3,7 +3,7 @@ version: '2.4'
 services:
   traefik:
     image: traefik
-    command: --api --docker -c traefik.toml
+    command: --api --docker -c /traefik.toml
     ports:
       - "80:80"
       - "443:443"
