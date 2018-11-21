@@ -2,7 +2,7 @@ version: '2.4'
 
 services:
   traefik:
-    image: traefik:1.6
+    image: traefik:1.7
     command: --api --docker
     ports:
       - "80:80"
@@ -94,5 +94,4 @@ services:
       - ${CONFIG_DIR}/home-assistant:/config
       - /etc/localtime:/etc/localtime:ro
     labels:
-      traefik.simple.frontend.rule: Host:home.media.varspool.com
-      traefik.additional.frontend.rule: Host:home-assistant.media.varspool.com
+      traefik.frontend.rule: Host:home.media.varspool.com,home-assistant.media.varspool.com
