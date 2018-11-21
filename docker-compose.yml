@@ -83,3 +83,16 @@ services:
       PGID: ${PGID}
     labels:
       traefik.frontend.rule: Host:nzbget.media.varspool.com
+
+  homeassistant:
+    image: homeassistant/home-assistant
+    network_mode: "host"
+    container_name: home-assistant
+    ports:
+      - "8123:8123"
+    volumes:
+      - ${CONFIG_DIR}/home-assistant:/config
+      - /etc/localtime:/etc/localtime:ro
+    labels:
+      traefik.simple.frontend.rule: Host:home.media.varspool.com
+      traefik.additional.frontend.rule: Host:home-assistant.media.varspool.com
