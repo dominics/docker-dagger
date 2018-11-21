@@ -94,4 +94,4 @@ services:
       - ${CONFIG_DIR}/home-assistant:/config
       - /etc/localtime:/etc/localtime:ro
     labels:
-      traefik.frontend.rule: Host:home.media.varspool.com;Host:home-assistant.media.varspool.com
+      traefik.frontend.rule: Host:home.media.varspool.com
