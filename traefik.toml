@@ -29,3 +29,8 @@ watch  = true
       [backends.backend-plex.servers.server0]
         url = "http://192.168.1.200:32400"
         weight = 99
+  [backends.backend-home-assistant]
+    [backends.backend-home-assistant.servers]
+      [backends.backend-home-assistant.servers.server0]
+        url = "http://192.168.1.200:8123"
+        weight = 99
