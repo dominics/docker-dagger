@@ -95,3 +95,5 @@ services:
       - /etc/localtime:/etc/localtime:ro
     labels:
       traefik.frontend.rule: Host:home.media.varspool.com
+      traefik.port:          8123
+      traefik.backend:       home-assistant
