@@ -29,3 +29,25 @@ watch  = true
       [backends.backend-plex.servers.server0]
         url = "http://192.168.1.200:32400"
         weight = 99
+  [backends.backend-home]
+    [backends.backend-home.servers]
+      [backends.backend-home.servers.server0]
+        url = "http://192.168.1.200:8123"
+        weight = 99
+  [backends.home]
+    [backends.home.servers]
+      [backends.home.servers.server0]
+        url = "http://192.168.1.200:8123"
+        weight = 99
+
+[frontends]
+  [frontends.home]
+    backend="home"
+    entryPoints = ["http", "https"]
+    passHostHeader = true
+    proirity = 20
+    [frontends.home.routes.docker]
+      rule="Host:home2.media.varspool.com"
+
+
+ [backends]
