@@ -84,6 +84,10 @@ services:
     labels:
       traefik.frontend.rule: Host:nzbget.media.varspool.com
 
+ # Home-assistant runs in host network mode, which means it doesn't share a
+ # network with the Traefik container. This means the Traefik Docker
+ # configuration is completely useless for routing to the container, and you
+ # have to statically define front/backend in the traefik.toml
   home:
     image: homeassistant/home-assistant
     network_mode: "host"
