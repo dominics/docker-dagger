@@ -48,6 +48,3 @@ watch  = true
     proirity = 20
     [frontends.home.routes.docker]
       rule="Host:home2.media.varspool.com"
-
-
- [backends]
