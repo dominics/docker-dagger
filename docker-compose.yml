@@ -52,24 +52,6 @@ services:
     labels:
       traefik.frontend.rule: Host:radarr.media.varspool.com
 
-  plex:
-    image: linuxserver/plex
-    network_mode: "host"
-    volumes:
-      - ${CONFIG_DIR}/plex:/config
-      - ${STORAGE_DIR}/movies:/data/movies
-      - ${STORAGE_DIR}/tv:/data/tv
-      - ${STORAGE_DIR}/transcode:/transcode
-      - /dev/dri:/dev/dri
-    environment:
-      VERSION: latest
-      PUID: ${PUID}
-      PGID: ${PGID}
-    labels:
-      traefik.frontend.rule: Host:plex.media.varspool.com
-      traefik.port:          32400
-      traefik.backend:       plex
-
   nzbget:
     image: linuxserver/nzbget
     ports:
@@ -84,10 +66,25 @@ services:
     labels:
       traefik.frontend.rule: Host:nzbget.media.varspool.com
 
- # Home-assistant runs in host network mode, which means it doesn't share a
+ # These containers run in host network mode, which means they don't share a
  # network with the Traefik container. This means the Traefik Docker
- # configuration is completely useless for routing to the container, and you
- # have to statically define front/backend in the traefik.toml
+ # configuration is completely useless for routing to them, and you
+ # have to statically define front/backends in the traefik.toml
+
+  plex:
+    image: linuxserver/plex
+    network_mode: "host"
+    volumes:
+      - ${CONFIG_DIR}/plex:/config
+      - ${STORAGE_DIR}/movies:/data/movies
+      - ${STORAGE_DIR}/tv:/data/tv
+      - ${STORAGE_DIR}/transcode:/transcode
+      - /dev/dri:/dev/dri
+    environment:
+      VERSION: latest
+      PUID: ${PUID}
+      PGID: ${PGID}
+
   home:
     image: homeassistant/home-assistant
     network_mode: "host"

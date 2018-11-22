@@ -24,9 +24,9 @@ watch  = true
 [file]
 
 [backends]
-  [backends.backend-plex]
-    [backends.backend-plex.servers]
-      [backends.backend-plex.servers.server0]
+  [backends.plex]
+    [backends.plex.servers]
+      [backends.plex.servers.server0]
         url = "http://192.168.1.200:32400"
         weight = 99
   [backends.home]
@@ -36,10 +36,13 @@ watch  = true
         weight = 99
 
 [frontends]
+  [frontends.plex]
+    backend = "plex"
+    passHostHeader = true
+    [frontends.plex.routes.docker]
+      rule = "Host:plex.media.varspool.com"
   [frontends.home]
     backend = "home"
-    entryPoints = ["http", "https"]
     passHostHeader = true
-    proirity = 20
     [frontends.home.routes.docker]
       rule = "Host:home.media.varspool.com"
