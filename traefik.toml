@@ -42,4 +42,4 @@ watch  = true
     passHostHeader = true
     proirity = 20
     [frontends.home.routes.docker]
-      rule="Host:home.media.varspool.com"
+      rule = "Host:home.media.varspool.com"

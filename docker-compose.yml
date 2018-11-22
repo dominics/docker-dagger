@@ -91,12 +91,6 @@ services:
   home:
     image: homeassistant/home-assistant
     network_mode: "host"
-    ports:
-      - "8123:8123"
     volumes:
       - ${CONFIG_DIR}/home-assistant:/config
       - /etc/localtime:/etc/localtime:ro
-    labels:
-      traefik.frontend.rule: Host:home.media.varspool.com
-      traefik.port:          8123
-      traefik.backend:       home
