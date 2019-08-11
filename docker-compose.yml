@@ -35,6 +35,7 @@ services:
     environment:
       PUID: ${PUID}
       PGID: ${PGID}
+      TZ:   ${TZ:?Need to set TZ}
     labels:
       traefik.frontend.rule: Host:sonarr.media.varspool.com
 
@@ -49,6 +50,7 @@ services:
     environment:
       PUID: ${PUID}
       PGID: ${PGID}
+      TZ:   ${TZ}
     labels:
       traefik.frontend.rule: Host:radarr.media.varspool.com
 
@@ -63,8 +65,20 @@ services:
     environment:
       PUID: ${PUID}
       PGID: ${PGID}
+      TZ:   ${TZ}
     labels:
       traefik.frontend.rule: Host:nzbget.media.varspool.com
+
+  ombi:
+    image: linuxserver/ombi
+    ports:
+      - "3579:3579"
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ:   ${TZ}
+    volumes:
+      - ${CONFIG_DIR}/ombi:/config
 
  # These containers run in host network mode, which means they don't share a
  # network with the Traefik container. This means the Traefik Docker
