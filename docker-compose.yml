@@ -83,7 +83,7 @@ services:
       traefik.frontend.rule: Host:ombi.media.varspool.com
 
   shinobi:
-    image: shinobisystems/shinobi:latest-ubuntu
+    image: shinobicctv/shinobi:latest
     shm_size: "256mb"
     ports:
      - "6565:8080"
@@ -92,7 +92,7 @@ services:
     volumes:
       - ${CONFIG_DIR}/shinobi/config:/config
       - ${CONFIG_DIR}/shinobi/autoload:/customAutoload
-      - ${STORAGE_DIR}/shinobi/db:/var/lib/mysql
+      - ${CONFIG_DIR}/shinobi/db:/var/lib/mysql
       - ${STORAGE_DIR}/shinobi/videos:/opt/shinobi/videos
     labels:
       traefik.frontend.rule: Host:shinobi.media.varspool.com
