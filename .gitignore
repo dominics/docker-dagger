@@ -3,3 +3,4 @@ acme.json
 ca/*
 !ca/generate
 old/
+.idea/

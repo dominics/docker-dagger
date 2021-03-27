@@ -118,8 +118,9 @@ services:
       PGID: ${PGID}
 
   home:
-    image: homeassistant/home-assistant
+    image: homeassistant/home-assistant:stable
     network_mode: "host"
     volumes:
       - ${CONFIG_DIR}/home-assistant:/config
       - /etc/localtime:/etc/localtime:ro
+    restart: unless-stopped

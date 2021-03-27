@@ -1,0 +1,31 @@
+#!/bin/bash
+
+set -euo pipefail
+
+echo "Deploying changes to dagger"
+echo "Using keypair"
+ssh-add -l
+
+cd /home/media
+
+echo "Updating code"
+sudo -EH git pull
+
+echo "Updating configuration"
+rsync -a config/home-assistant/ /etc/media-server/home-assistant
+
+echo "Pulling new versions of containers"
+docker-compose pull --parallel
+
+echo "Shutting down running containers"
+docker-compose down
+
+echo "Starting containers, and then logging (control+c when done with logs)"
+docker-compose up -d; docker-compose logs -f
+
+echo "-------------------"
+echo "Running containers:"
+docker-compose ps
+echo "-------------------"
+
+echo "All done"
