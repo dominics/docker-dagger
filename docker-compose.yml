@@ -69,35 +69,6 @@ services:
     labels:
       traefik.frontend.rule: Host:nzbget.media.varspool.com
 
-  ombi:
-    image: linuxserver/ombi
-    ports:
-      - "3579:3579"
-    environment:
-      PUID: ${PUID}
-      PGID: ${PGID}
-      TZ:   ${TZ}
-    volumes:
-      - ${CONFIG_DIR}/ombi:/config
-    labels:
-      traefik.frontend.rule: Host:ombi.media.varspool.com
-
-  shinobi:
-    image: shinobicctv/shinobi:latest
-    shm_size: "256mb"
-    ports:
-     - "6565:8080"
-    environment:
-      APP_BRANCH: dev
-      PASSWORD_HASH: sha256
-    volumes:
-      - ${CONFIG_DIR}/shinobi/config:/config
-      - ${CONFIG_DIR}/shinobi/autoload:/customAutoload
-      - ${CONFIG_DIR}/shinobi/db:/var/lib/mysql
-      - ${STORAGE_DIR}/shinobi/videos:/opt/shinobi/videos
-    labels:
-      traefik.frontend.rule: Host:shinobi.media.varspool.com
-
  # These containers run in host network mode, which means they don't share a
  # network with the Traefik container. This means the Traefik Docker
  # configuration is completely useless for routing to them, and you
