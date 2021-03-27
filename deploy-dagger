@@ -12,7 +12,7 @@ echo "Updating code"
 sudo -EH git pull
 
 echo "Updating configuration"
-rsync -a config/home-assistant/ /etc/media-server/home-assistant
+sudo rsync -a config/home-assistant/ /etc/media-server/home-assistant
 
 echo "Pulling new versions of containers"
 docker-compose pull --parallel
