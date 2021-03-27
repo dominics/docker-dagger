@@ -13,8 +13,14 @@ homeassistant:
   # Pick yours from here: http://en.wikipedia.org/wiki/List_of_tz_database_time_zones
   time_zone: Pacific/Auckland
 
+  external_url: https://home.media.varspool.com
+  internal_url: http://192.168.1.200:8123
+
   # Customization file
   customize: !include customize.yaml
+
+# Default config
+default_config:
 
 # Enables the frontend
 frontend:
@@ -24,7 +30,6 @@ config:
 
 # Uncomment this if you are using SSL/TLS, running in Docker container, etc.
 http:
-  base_url: home.media.varspool.com
 
 # Checks for available updates
 # Note: This component will send some information about your system to
@@ -55,8 +60,6 @@ sun:
 
 # Sensors
 sensor:
-  # Weather prediction
-  - platform: yr
 
 # Text to speech
 tts:
