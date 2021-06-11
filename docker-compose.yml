@@ -87,6 +87,8 @@ services:
       VERSION: latest
       PUID: ${PUID}
       PGID: ${PGID}
+      NVIDIA_VISIBLE_DEVICES: all
+    runtime: nvidia
 
   home:
     image: homeassistant/home-assistant:stable
