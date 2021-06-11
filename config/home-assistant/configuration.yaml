@@ -79,10 +79,10 @@ climate:
     password: !secret fujitsu_password
     tokenpath: 'token.txt'
 
-dyson:
-  username: dominics@gmail.com
-  password: !secret dyson_password
-  language: AU
-  devices:
-    - device_id: SZ2-AU-JDA0973A
-      device_ip: 192.168.1.150
+#dyson:
+#  username: dominics@gmail.com
+#  password: !secret dyson_password
+#  language: AU
+#  devices:
+#    - device_id: SZ2-AU-JDA0973A
+#      device_ip: 192.168.1.150
