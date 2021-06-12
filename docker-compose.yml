@@ -106,7 +106,7 @@ services:
     volumes:
       - ${CONFIG_DIR}/trex-eth:/config
     environment:
-      NVIDIA_VISIBLE_DEVICES: all
+      NVIDIA_VISIBLE_DEVICES: 0
       WALLET:                 "0x44BC65DB94D8693025f710fe832B415F9E591ee1"
       SERVER:                 stratum+ssl://us2.ethermine.org:5555
       WORKER:                 dagger
@@ -123,7 +123,7 @@ services:
     volumes:
       - ${CONFIG_DIR}/trex-raven:/config
     environment:
-      NVIDIA_VISIBLE_DEVICES: all
+      NVIDIA_VISIBLE_DEVICES: 1
       WALLET:                 "R9qNCgKWmEqd5WdyGKVm74R3xcwqqPFCpe"
       SERVER:                 stratum+ssl://stratum-ravencoin.flypool.org:3443
       WORKER:                 dagger
