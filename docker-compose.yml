@@ -98,19 +98,36 @@ services:
       - /etc/localtime:/etc/localtime:ro
     restart: unless-stopped
 
-  miner:
+  miner-eth:
     image: ptrfrll/nv-docker-trex@sha256:bcb3bc8dc06c4aaa559e190b68db16c79185e580f2a315270b53c58c19a25f53
     runtime: nvidia
     ports:
       - "4067:4067"
     volumes:
-      - ${CONFIG_DIR}/trex:/config
+      - ${CONFIG_DIR}/trex-eth:/config
     environment:
       NVIDIA_VISIBLE_DEVICES: all
       WALLET:                 "0x44BC65DB94D8693025f710fe832B415F9E591ee1"
       SERVER:                 stratum+ssl://us2.ethermine.org:5555
       WORKER:                 dagger
       ALGO:                   ethash
-      PASS:                   "dominics@gmail.com"
+      PASS:                   x
     labels:
       traefik.frontend.rule: Host:trex.media.varspool.com
+
+  miner-raven:
+    image: ptrfrll/nv-docker-trex@sha256:bcb3bc8dc06c4aaa559e190b68db16c79185e580f2a315270b53c58c19a25f53
+    runtime: nvidia
+    ports:
+      - "4068:4067"
+    volumes:
+      - ${CONFIG_DIR}/trex-raven:/config
+    environment:
+      NVIDIA_VISIBLE_DEVICES: all
+      WALLET:                 "R9qNCgKWmEqd5WdyGKVm74R3xcwqqPFCpe"
+      SERVER:                 stratum+ssl://stratum-ravencoin.flypool.org:3443
+      WORKER:                 dagger
+      ALGO:                   kawpow
+      PASS:                   0.1
+    labels:
+      traefik.frontend.rule: Host:trex-raven.media.varspool.com
