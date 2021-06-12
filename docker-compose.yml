@@ -1,3 +1,5 @@
+version: '2.4'
+
 services:
   traefik:
     image: traefik:1.7
@@ -105,10 +107,10 @@ services:
       - ${CONFIG_DIR}/trex:/config
     environment:
       NVIDIA_VISIBLE_DEVICES: all
-      WALLET:                 "0x44BC65DB94D8693025f710fe832B415F9E591ee1"
+      WALLET:                 0x44BC65DB94D8693025f710fe832B415F9E591ee1
       SERVER:                 stratum+ssl://us2.ethermine.org:5555
       WORKER:                 dagger
       ALGO:                   ethash
-      PASS:                   ""
+      #PASS: foo
     labels:
       traefik.frontend.rule: Host:trex.media.varspool.com

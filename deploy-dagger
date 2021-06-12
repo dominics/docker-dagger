@@ -2,6 +2,9 @@
 
 set -euo pipefail
 
+:whenexport CONFIG_DIR=/home/media/config
+export STORAGE_DIR=/media/storage
+
 echo "Deploying changes to dagger"
 echo "Using keypair"
 ssh-add -l
