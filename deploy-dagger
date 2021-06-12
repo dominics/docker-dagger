@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-export CONFIG_DIR=/home/media/config
+export CONFIG_DIR=/etc/media-server
 export STORAGE_DIR=/media/storage
 
 echo "Deploying changes to dagger"
