@@ -111,6 +111,6 @@ services:
       SERVER:                 stratum+ssl://us2.ethermine.org:5555
       WORKER:                 dagger
       ALGO:                   ethash
-      PASS:                   ""
+      PASS:                   "dominics@gmail.com"
     labels:
       traefik.frontend.rule: Host:trex.media.varspool.com
