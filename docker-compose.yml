@@ -110,6 +110,8 @@ services:
       --temperature-limit 90
       --temperature-start 70
       --fan t:85
+      --api-bind-http 0.0.0.0:4067
+      --api-bind-telnet 0
     runtime: nvidia
     ports:
       - "4067:4067"
