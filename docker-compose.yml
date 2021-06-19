@@ -121,6 +121,7 @@ services:
       NVIDIA_VISIBLE_DEVICES: 0
     labels:
       traefik.frontend.rule: Host:trex.media.varspool.com
+      ofelia.enabled: "true"
       ofelia.job-exec.weekday-peak-1-begins.schedule: "0 0 7 * * 1-5" # 7am weekdays
       ofelia.job-exec.weekday-peak-1-begins.command:  "wget -q -t 1 -T 1 http://100.97.14.14:4067/control?pause=true;  wget -q -t 1 -T 1 http://100.87.71.30:4067/control?pause=true"
       ofelia.job-exec.weekday-peak-1-ends.schedule:   "0 0 11 * * 1-5" # 11am weekdays
