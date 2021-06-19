@@ -114,7 +114,7 @@ services:
       --api-bind-telnet 0
     runtime: nvidia
     ports:
-      - "4067:4067"
+      - "100.87.71.30:4067:4067"
     volumes:
       - ${CONFIG_DIR}/trex:/config
     environment:
