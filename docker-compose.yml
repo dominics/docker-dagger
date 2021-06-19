@@ -109,7 +109,7 @@ services:
       -w dagger
       --temperature-limit 90
       --temperature-start 70
-      --fan t:85
+      --fan t:80
       --api-bind-http 0.0.0.0:4067
       --api-bind-telnet 0
     runtime: nvidia
