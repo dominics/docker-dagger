@@ -122,20 +122,20 @@ services:
     labels:
       traefik.frontend.rule: Host:trex.media.varspool.com
 
-  schedule:
-    image: ptrfrll/nv-docker-trex@sha256:bcb3bc8dc06c4aaa559e190b68db16c79185e580f2a315270b53c58c19a25f53
-    command: bash -c "sleep infinity"
-    network_mode: "host"
-    labels:
-      ofelia.enabled: "true"
-      ofelia.job-exec.weekday-peak-1-begins.schedule: "0 0 7 * * 1-5" # 7am weekdays
-      ofelia.job-exec.weekday-peak-1-begins.command:  "wget -q -t 1 -T 1 http://100.97.14.14:4067/control?pause=true || wget -q -t 1 -T 1 http://100.87.71.30:4067/control?pause=true"
-      ofelia.job-exec.weekday-peak-1-ends.schedule:   "0 0 11 * * 1-5" # 11am weekdays
-      ofelia.job-exec.weekday-peak-1-ends.command:    "wget -q -t 1 -T 1 http://100.97.14.14:4067/control?pause=false || wget -q -t 1 -T 1 http://100.87.71.30:4067/control?pause=false"
-      ofelia.job-exec.weekday-peak-2-begins.schedule: "0 0 17 * * 1-5" # 5pm weekdays
-      ofelia.job-exec.weekday-peak-2-begins.command:  "wget -q -t 1 -T 1 http://100.97.14.14:4067/control?pause=true ||  wget -q -t 1 -T 1 http://100.87.71.30:4067/control?pause=true"
-      ofelia.job-exec.weekday-peak-2-ends.schedule:   "0 0 21 * * 1-5" # 9pm weekdays
-      ofelia.job-exec.weekday-peak-2-ends.command:    "wget -q -t 1 -T 1 http://100.97.14.14:4067/control?pause=false || wget -q -t 1 -T 1 http://100.87.71.30:4067/control?pause=false"
+#  schedule:
+#    image: ptrfrll/nv-docker-trex@sha256:bcb3bc8dc06c4aaa559e190b68db16c79185e580f2a315270b53c58c19a25f53
+#    command: bash -c "sleep infinity"
+#    network_mode: "host"
+#    labels:
+#      ofelia.enabled: "true"
+#      ofelia.job-exec.weekday-peak-1-begins.schedule: "0 0 7 * * 1-5" # 7am weekdays
+#      ofelia.job-exec.weekday-peak-1-begins.command:  "wget -q -t 1 -T 1 http://100.97.14.14:4067/control?pause=true || wget -q -t 1 -T 1 http://100.87.71.30:4067/control?pause=true"
+#      ofelia.job-exec.weekday-peak-1-ends.schedule:   "0 0 11 * * 1-5" # 11am weekdays
+#      ofelia.job-exec.weekday-peak-1-ends.command:    "wget -q -t 1 -T 1 http://100.97.14.14:4067/control?pause=false || wget -q -t 1 -T 1 http://100.87.71.30:4067/control?pause=false"
+#      ofelia.job-exec.weekday-peak-2-begins.schedule: "0 0 17 * * 1-5" # 5pm weekdays
+#      ofelia.job-exec.weekday-peak-2-begins.command:  "wget -q -t 1 -T 1 http://100.97.14.14:4067/control?pause=true ||  wget -q -t 1 -T 1 http://100.87.71.30:4067/control?pause=true"
+#      ofelia.job-exec.weekday-peak-2-ends.schedule:   "0 0 21 * * 1-5" # 9pm weekdays
+#      ofelia.job-exec.weekday-peak-2-ends.command:    "wget -q -t 1 -T 1 http://100.97.14.14:4067/control?pause=false || wget -q -t 1 -T 1 http://100.87.71.30:4067/control?pause=false"
 
   cron:
     image: mcuadros/ofelia:latest
