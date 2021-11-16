@@ -14,8 +14,12 @@ watch  = true
 [entryPoints]
   [entryPoints.http]
     address = ":80"
+    [entryPoints.http.forwardedHeaders]
+      trustedIPs = ["192.168.1.0/24", "114.23.221.217/32"]
   [entryPoints.https]
     address = ":443"
+    [entryPoints.http.forwardedHeaders]
+      trustedIPs = ["192.168.1.0/24", "114.23.221.217/32"]
     [entryPoints.https.tls]
       [[entryPoints.https.tls.certificates]]
       certFile = "/etc/traefik/ssl/*.media.varspool.com/cert.pem"

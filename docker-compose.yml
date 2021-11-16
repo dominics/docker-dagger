@@ -85,7 +85,7 @@ services:
       - ${STORAGE_DIR}/transcode:/transcode
       - /dev/dri:/dev/dri
     environment:
-      VERSION: latest
+      VERSION: public
       PUID: ${PUID}
       PGID: ${PGID}
       NVIDIA_VISIBLE_DEVICES: 1
