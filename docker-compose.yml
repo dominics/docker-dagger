@@ -88,7 +88,8 @@ services:
       VERSION: public
       PUID: ${PUID}
       PGID: ${PGID}
-      NVIDIA_VISIBLE_DEVICES: 1
+      #NVIDIA_VISIBLE_DEVICES: 1
+      NVIDIA_VISIBLE_DEVICES: all
 
   home:
     image: homeassistant/home-assistant:stable
@@ -98,29 +99,29 @@ services:
       - /etc/localtime:/etc/localtime:ro
     restart: unless-stopped
 
-  miner:
-    image: ptrfrll/nv-docker-trex@sha256:bcb3bc8dc06c4aaa559e190b68db16c79185e580f2a315270b53c58c19a25f53
-    command: >
-      ./t-rex
-      -c /config/config.json
-      -a ethash
-      -o stratum+ssl://us2.ethermine.org:5555
-      -u "0x44BC65DB94D8693025f710fe832B415F9E591ee1"
-      -w dagger
-      --temperature-limit 90
-      --temperature-start 70
-      --fan t:80
-      --api-bind-http 0.0.0.0:4067
-      --api-bind-telnet 0
-    runtime: nvidia
-    ports:
-      - "100.87.71.30:4067:4067"
-    volumes:
-      - ${CONFIG_DIR}/trex:/config
-    environment:
-      NVIDIA_VISIBLE_DEVICES: 0
-    labels:
-      traefik.frontend.rule: Host:trex.media.varspool.com
+#  miner:
+#    image: ptrfrll/nv-docker-trex@sha256:bcb3bc8dc06c4aaa559e190b68db16c79185e580f2a315270b53c58c19a25f53
+#    command: >
+#      ./t-rex
+#      -c /config/config.json
+#      -a ethash
+#      -o stratum+ssl://us2.ethermine.org:5555
+#      -u "0x44BC65DB94D8693025f710fe832B415F9E591ee1"
+#      -w dagger
+#      --temperature-limit 90
+#      --temperature-start 70
+#      --fan t:80
+#      --api-bind-http 0.0.0.0:4067
+#      --api-bind-telnet 0
+#    runtime: nvidia
+#    ports:
+#      - "100.87.71.30:4067:4067"
+#    volumes:
+#      - ${CONFIG_DIR}/trex:/config
+#    environment:
+#      NVIDIA_VISIBLE_DEVICES: 0
+#    labels:
+#      traefik.frontend.rule: Host:trex.media.varspool.com
 
 #  schedule:
 #    image: ptrfrll/nv-docker-trex@sha256:bcb3bc8dc06c4aaa559e190b68db16c79185e580f2a315270b53c58c19a25f53
