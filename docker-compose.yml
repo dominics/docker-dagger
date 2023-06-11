@@ -69,6 +69,21 @@ services:
     labels:
       traefik.frontend.rule: Host:nzbget.media.varspool.com
 
+  sabnzbd:
+    image: lscr.io/linuxserver/sabnzbd
+    ports:
+      - "8081:8080"
+    volumes:
+      - ${CONFIG_DIR}/sabnzbd:/config
+      - ${STORAGE_DIR}/downloads:/downloads
+      - ${STORAGE_DIR}/incomplete-downloads:/incomplete-downloads
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ:   ${TZ}
+    labels:
+      traefik.frontend.rule: Host:sabnzbd.media.varspool.com
+
  # These containers run in host network mode, which means they don't share a
  # network with the Traefik container. This means the Traefik Docker
  # configuration is completely useless for routing to them, and you
