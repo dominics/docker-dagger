@@ -54,20 +54,20 @@ services:
     labels:
       traefik.frontend.rule: Host:radarr.media.varspool.com
 
-  nzbget:
-    image: linuxserver/nzbget
-    ports:
-      - "6789:6789"
-    volumes:
-      - ${CONFIG_DIR}/nzbget:/config
-      - ${STORAGE_DIR}/downloads:/downloads
-      - ${STORAGE_DIR}/intermediate:/intermediate
-    environment:
-      PUID: ${PUID}
-      PGID: ${PGID}
-      TZ:   ${TZ}
-    labels:
-      traefik.frontend.rule: Host:nzbget.media.varspool.com
+#  nzbget:
+#    image: linuxserver/nzbget
+#    ports:
+#      - "6789:6789"
+#    volumes:
+#      - ${CONFIG_DIR}/nzbget:/config
+#      - ${STORAGE_DIR}/downloads:/downloads
+#      - ${STORAGE_DIR}/intermediate:/intermediate
+#    environment:
+#      PUID: ${PUID}
+#      PGID: ${PGID}
+#      TZ:   ${TZ}
+#    labels:
+#      traefik.frontend.rule: Host:nzbget.media.varspool.com
 
   sabnzbd:
     image: lscr.io/linuxserver/sabnzbd
@@ -76,7 +76,6 @@ services:
     volumes:
       - ${CONFIG_DIR}/sabnzbd:/config
       - ${STORAGE_DIR}/downloads:/downloads
-      - ${STORAGE_DIR}/incomplete-downloads:/incomplete-downloads
     environment:
       PUID: ${PUID}
       PGID: ${PGID}
