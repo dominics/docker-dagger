@@ -106,13 +106,13 @@ services:
       #NVIDIA_VISIBLE_DEVICES: 1
       NVIDIA_VISIBLE_DEVICES: all
 
-  home:
-    image: homeassistant/home-assistant:stable
-    network_mode: "host"
-    volumes:
-      - ${CONFIG_DIR}/home-assistant:/config
-      - /etc/localtime:/etc/localtime:ro
-    restart: unless-stopped
+#  home:
+#    image: homeassistant/home-assistant:stable
+#    network_mode: "host"
+#    volumes:
+#      - ${CONFIG_DIR}/home-assistant:/config
+#      - /etc/localtime:/etc/localtime:ro
+#    restart: unless-stopped
 
 #  miner:
 #    image: ptrfrll/nv-docker-trex@sha256:bcb3bc8dc06c4aaa559e190b68db16c79185e580f2a315270b53c58c19a25f53
