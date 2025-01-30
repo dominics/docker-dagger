@@ -84,6 +84,25 @@ services:
       traefik.frontend.rule: Host:sabnzbd.media.varspool.com
       traefik.port:          8081
 
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:latest
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ:   ${TZ}
+      WEBUI_PORT: 8082
+      TORRENTING_PORT: 44881
+    volumes:
+      - ${CONFIG_DIR}/qbittorrent:/config
+      - ${STORAGE_DIR}/downloads:/downloads
+    ports:
+      - 8082:8082
+      - 44881:44881
+      - 44881:44881/udp
+    labels:
+      traefik.frontend.rule: Host:qbit.media.varspool.com
+      traefik.port:          8082
+
  # These containers run in host network mode, which means they don't share a
  # network with the Traefik container. This means the Traefik Docker
  # configuration is completely useless for routing to them, and you
