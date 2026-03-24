@@ -18,17 +18,17 @@ echo "Updating configuration"
 sudo rsync -a config/home-assistant/ /etc/media-server/home-assistant
 
 echo "Pulling new versions of containers"
-docker-compose pull --parallel
+docker compose pull
 
 echo "Shutting down running containers"
-docker-compose down
+docker compose down
 
 echo "Starting containers, and then logging (control+c when done with logs)"
-docker-compose up -d; docker-compose logs -f
+docker compose up -d; docker compose logs -f
 
 echo "-------------------"
 echo "Running containers:"
-docker-compose ps
+docker compose ps
 echo "-------------------"
 
 echo "All done"
