@@ -1,6 +1,6 @@
 services:
   traefik:
-    image: traefik:v3.3
+    image: traefik:v3.6
     ports:
       - "80:80"
       - "443:443"
@@ -38,6 +38,7 @@ services:
       traefik.http.routers.sonarr.entrypoints: "websecure"
       traefik.http.routers.sonarr.middlewares: "tailscale-only@file"
       traefik.http.services.sonarr.loadbalancer.server.port: "8989"
+    restart: unless-stopped
 
   radarr:
     image: linuxserver/radarr
@@ -58,6 +59,7 @@ services:
       traefik.http.routers.radarr.entrypoints: "websecure"
       traefik.http.routers.radarr.middlewares: "tailscale-only@file"
       traefik.http.services.radarr.loadbalancer.server.port: "7878"
+    restart: unless-stopped
 
 #  nzbget:
 #    image: linuxserver/nzbget
@@ -92,6 +94,7 @@ services:
       traefik.http.routers.sabnzbd.entrypoints: "websecure"
       traefik.http.routers.sabnzbd.middlewares: "tailscale-only@file"
       traefik.http.services.sabnzbd.loadbalancer.server.port: "8081"
+    restart: unless-stopped
 
   qbittorrent:
     image: lscr.io/linuxserver/qbittorrent:latest
@@ -115,6 +118,7 @@ services:
       traefik.http.routers.qbittorrent.entrypoints: "websecure"
       traefik.http.routers.qbittorrent.middlewares: "tailscale-only@file"
       traefik.http.services.qbittorrent.loadbalancer.server.port: "8082"
+    restart: unless-stopped
 
  # Plex runs in host network mode — routed via file provider in dynamic.yml
   plex:
@@ -132,6 +136,7 @@ services:
       PUID: ${PUID}
       PGID: ${PGID}
       NVIDIA_VISIBLE_DEVICES: all
+    restart: unless-stopped
 
   cron:
     image: mcuadros/ofelia:latest
@@ -140,6 +145,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
       TZ: "Pacific/Auckland"
+    restart: unless-stopped
 
 volumes:
   traefik-acme:
