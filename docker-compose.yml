@@ -138,14 +138,6 @@ services:
       NVIDIA_VISIBLE_DEVICES: all
     restart: unless-stopped
 
-  cron:
-    image: mcuadros/ofelia:latest
-    command: daemon --docker
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    environment:
-      TZ: "Pacific/Auckland"
-    restart: unless-stopped
 
 volumes:
   traefik-acme:
