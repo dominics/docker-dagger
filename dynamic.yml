@@ -5,8 +5,26 @@ http:
       service: cdn-station
       tls:
         certResolver: letsencrypt
+        domains:
+          - main: "statio.nz"
+            sans:
+              - "www.statio.nz"
       entryPoints:
         - websecure
+
+    cdn-station-www:
+      rule: "Host(`www.statio.nz`)"
+      service: cdn-station
+      tls:
+        certResolver: letsencrypt
+        domains:
+          - main: "statio.nz"
+            sans:
+              - "www.statio.nz"
+      entryPoints:
+        - websecure
+      middlewares:
+        - www-to-bare
 
     plex:
       rule: "Host(`plex.media.varspool.com`)"
@@ -29,6 +47,12 @@ http:
           - url: "http://192.168.1.200:32400"
 
   middlewares:
+    www-to-bare:
+      redirectRegex:
+        regex: "^https://www\\.statio\\.nz/(.*)"
+        replacement: "https://statio.nz/${1}"
+        permanent: true
+
     tailscale-only:
       ipAllowList:
         sourceRange:
