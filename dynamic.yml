@@ -1,7 +1,7 @@
 http:
   routers:
     cdn-station:
-      rule: "Host(`cdn.statio.nz`)"
+      rule: "Host(`statio.nz`)"
       service: cdn-station
       tls:
         certResolver: letsencrypt
