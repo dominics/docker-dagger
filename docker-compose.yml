@@ -61,6 +61,27 @@ services:
       traefik.http.services.radarr.loadbalancer.server.port: "7878"
     restart: unless-stopped
 
+  lidarr:
+    image: lscr.io/linuxserver/lidarr
+    ports:
+      - "100.87.71.30:8686:8686"
+    volumes:
+      - ${CONFIG_DIR}/lidarr:/config
+      - ${STORAGE_DIR}/music:/music
+      - ${STORAGE_DIR}/downloads:/downloads
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ:   ${TZ}
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.lidarr.rule: "Host(`lidarr.media.varspool.com`)"
+      traefik.http.routers.lidarr.tls: "true"
+      traefik.http.routers.lidarr.entrypoints: "websecure"
+      traefik.http.routers.lidarr.middlewares: "tailscale-only@file"
+      traefik.http.services.lidarr.loadbalancer.server.port: "8686"
+    restart: unless-stopped
+
 #  nzbget:
 #    image: linuxserver/nzbget
 #    ports:
