@@ -96,29 +96,29 @@ services:
       traefik.http.services.sabnzbd.loadbalancer.server.port: "8081"
     restart: unless-stopped
 
-  qbittorrent:
-    image: lscr.io/linuxserver/qbittorrent:latest
-    environment:
-      PUID: ${PUID}
-      PGID: ${PGID}
-      TZ:   ${TZ}
-      WEBUI_PORT: 8082
-      TORRENTING_PORT: 44881
-    volumes:
-      - ${CONFIG_DIR}/qbittorrent:/config
-      - ${STORAGE_DIR}/downloads:/downloads
-    ports:
-      - "100.87.71.30:8082:8082"
-      - "44881:44881"
-      - "44881:44881/udp"
-    labels:
-      traefik.enable: "true"
-      traefik.http.routers.qbittorrent.rule: "Host(`qbit.media.varspool.com`)"
-      traefik.http.routers.qbittorrent.tls: "true"
-      traefik.http.routers.qbittorrent.entrypoints: "websecure"
-      traefik.http.routers.qbittorrent.middlewares: "tailscale-only@file"
-      traefik.http.services.qbittorrent.loadbalancer.server.port: "8082"
-    restart: unless-stopped
+#  qbittorrent:
+#    image: lscr.io/linuxserver/qbittorrent:latest
+#    environment:
+#      PUID: ${PUID}
+#      PGID: ${PGID}
+#      TZ:   ${TZ}
+#      WEBUI_PORT: 8082
+#      TORRENTING_PORT: 44881
+#    volumes:
+#      - ${CONFIG_DIR}/qbittorrent:/config
+#      - ${STORAGE_DIR}/downloads:/downloads
+#    ports:
+#      - "100.87.71.30:8082:8082"
+#      - "44881:44881"
+#      - "44881:44881/udp"
+#    labels:
+#      traefik.enable: "true"
+#      traefik.http.routers.qbittorrent.rule: "Host(`qbit.media.varspool.com`)"
+#      traefik.http.routers.qbittorrent.tls: "true"
+#      traefik.http.routers.qbittorrent.entrypoints: "websecure"
+#      traefik.http.routers.qbittorrent.middlewares: "tailscale-only@file"
+#      traefik.http.services.qbittorrent.loadbalancer.server.port: "8082"
+#    restart: unless-stopped
 
  # Plex runs in host network mode — routed via file provider in dynamic.yml
   plex:
