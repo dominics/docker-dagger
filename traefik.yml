@@ -1,8 +1,12 @@
 log:
   level: INFO
 
+# Dashboard is reached via svc:traefik (Tailscale Service) on the loopback :8080 bind.
+# `insecure: true` enables the built-in :8080 listener — only safe because the container
+# port is bound to 127.0.0.1 in docker-compose.yml.
 api:
   dashboard: true
+  insecure: true
 
 entryPoints:
   web:

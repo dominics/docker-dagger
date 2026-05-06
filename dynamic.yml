@@ -26,25 +26,11 @@ http:
       middlewares:
         - www-to-bare
 
-    plex:
-      rule: "Host(`plex.media.varspool.com`)"
-      service: plex
-      tls: {}
-      entryPoints:
-        - websecure
-      middlewares:
-        - tailscale-only
-
   services:
     cdn-station:
       loadBalancer:
         servers:
           - url: "http://192.168.1.200:8181"
-
-    plex:
-      loadBalancer:
-        servers:
-          - url: "http://192.168.1.200:32400"
 
   middlewares:
     www-to-bare:
@@ -53,13 +39,10 @@ http:
         replacement: "https://statio.nz/${1}"
         permanent: true
 
+    # Retained for any future internal services routed through Traefik.
+    # The media services have moved to Tailscale Services (see tailscale/serve.json).
     tailscale-only:
       ipAllowList:
         sourceRange:
           - "100.64.0.0/10"
           - "192.168.1.0/24"
-
-tls:
-  certificates:
-    - certFile: /etc/traefik/ssl/*.media.varspool.com/cert.pem
-      keyFile: /etc/traefik/ssl/*.media.varspool.com/key.pem

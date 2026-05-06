@@ -4,25 +4,19 @@ services:
     ports:
       - "80:80"
       - "443:443"
+      # Dashboard / API on loopback only — exposed to the tailnet via svc:traefik.
+      - "127.0.0.1:8080:8080"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./traefik.yml:/etc/traefik/traefik.yml:ro
       - ./dynamic.yml:/etc/traefik/dynamic.yml:ro
-      - ./ssl:/etc/traefik/ssl:ro
       - traefik-acme:/etc/traefik/acme
-    labels:
-      traefik.enable: "true"
-      traefik.http.routers.dashboard.rule: "Host(`traefik.media.varspool.com`)"
-      traefik.http.routers.dashboard.service: "api@internal"
-      traefik.http.routers.dashboard.tls: "true"
-      traefik.http.routers.dashboard.entrypoints: "websecure"
-      traefik.http.routers.dashboard.middlewares: "tailscale-only@file"
     restart: unless-stopped
 
   sonarr:
     image: linuxserver/sonarr
     ports:
-      - "100.87.71.30:8989:8989"
+      - "127.0.0.1:8989:8989"
     volumes:
       - ${CONFIG_DIR:?Need to set CONFIG_DIR}/sonarr:/config
       - ${STORAGE_DIR:?Need to set STORAGE_DIR}/tv:/tv
@@ -31,19 +25,12 @@ services:
       PUID: ${PUID}
       PGID: ${PGID}
       TZ:   ${TZ:?Need to set TZ}
-    labels:
-      traefik.enable: "true"
-      traefik.http.routers.sonarr.rule: "Host(`sonarr.media.varspool.com`)"
-      traefik.http.routers.sonarr.tls: "true"
-      traefik.http.routers.sonarr.entrypoints: "websecure"
-      traefik.http.routers.sonarr.middlewares: "tailscale-only@file"
-      traefik.http.services.sonarr.loadbalancer.server.port: "8989"
     restart: unless-stopped
 
   radarr:
     image: linuxserver/radarr
     ports:
-      - "100.87.71.30:7878:7878"
+      - "127.0.0.1:7878:7878"
     volumes:
       - ${CONFIG_DIR}/radarr:/config
       - ${STORAGE_DIR}/movies:/movies
@@ -52,19 +39,12 @@ services:
       PUID: ${PUID}
       PGID: ${PGID}
       TZ:   ${TZ}
-    labels:
-      traefik.enable: "true"
-      traefik.http.routers.radarr.rule: "Host(`radarr.media.varspool.com`)"
-      traefik.http.routers.radarr.tls: "true"
-      traefik.http.routers.radarr.entrypoints: "websecure"
-      traefik.http.routers.radarr.middlewares: "tailscale-only@file"
-      traefik.http.services.radarr.loadbalancer.server.port: "7878"
     restart: unless-stopped
 
   lidarr:
     image: lscr.io/linuxserver/lidarr
     ports:
-      - "100.87.71.30:8686:8686"
+      - "127.0.0.1:8686:8686"
     volumes:
       - ${CONFIG_DIR}/lidarr:/config
       - ${STORAGE_DIR}/music:/music
@@ -73,13 +53,6 @@ services:
       PUID: ${PUID}
       PGID: ${PGID}
       TZ:   ${TZ}
-    labels:
-      traefik.enable: "true"
-      traefik.http.routers.lidarr.rule: "Host(`lidarr.media.varspool.com`)"
-      traefik.http.routers.lidarr.tls: "true"
-      traefik.http.routers.lidarr.entrypoints: "websecure"
-      traefik.http.routers.lidarr.middlewares: "tailscale-only@file"
-      traefik.http.services.lidarr.loadbalancer.server.port: "8686"
     restart: unless-stopped
 
 #  nzbget:
@@ -100,7 +73,7 @@ services:
   sabnzbd:
     image: lscr.io/linuxserver/sabnzbd
     ports:
-      - "100.87.71.30:8081:8081"
+      - "127.0.0.1:8081:8081"
     volumes:
       - ${CONFIG_DIR}/sabnzbd:/config
       - ${STORAGE_DIR}/downloads:/downloads
@@ -108,13 +81,6 @@ services:
       PUID: ${PUID}
       PGID: ${PGID}
       TZ:   ${TZ}
-    labels:
-      traefik.enable: "true"
-      traefik.http.routers.sabnzbd.rule: "Host(`sabnzbd.media.varspool.com`)"
-      traefik.http.routers.sabnzbd.tls: "true"
-      traefik.http.routers.sabnzbd.entrypoints: "websecure"
-      traefik.http.routers.sabnzbd.middlewares: "tailscale-only@file"
-      traefik.http.services.sabnzbd.loadbalancer.server.port: "8081"
     restart: unless-stopped
 
 #  qbittorrent:
@@ -141,7 +107,9 @@ services:
 #      traefik.http.services.qbittorrent.loadbalancer.server.port: "8082"
 #    restart: unless-stopped
 
- # Plex runs in host network mode — routed via file provider in dynamic.yml
+ # Plex runs in host network mode so it stays reachable on the LAN (192.168.1.x:32400)
+ # without Tailscale. svc:plex (configured in tailscale/serve.json) provides HTTPS to
+ # tailnet clients on top of that.
   plex:
     image: linuxserver/plex
     runtime: nvidia
