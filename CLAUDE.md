@@ -29,9 +29,10 @@ Docker Compose stack for a home media server running on a host called "dagger" (
 - `docker-compose.yml` — All service definitions
 - `traefik.yml` — Traefik static configuration (entry points, providers, ACME)
 - `dynamic.yml` — Traefik dynamic configuration (statio.nz routes, middlewares)
-- `tailscale/serve.json` — Declarative `tailscale serve` config; advertises all media
-  services as Tailscale Services. Apply on dagger with
-  `sudo tailscale serve set --config /home/media/tailscale/serve.json`.
+- `tailscale/apply-serve` — Configures Tailscale Services for all media apps. Run on
+  dagger to apply. Uses imperative `tailscale serve --https=443` per service because
+  the declarative `set-config` JSON format does not enable TLS termination as of
+  tailscale 1.96.x.
 - `.env` / `.env.example` — Environment variables (`PUID`, `PGID`, `TZ`, `LOCAL_IP`)
 - `deploy-dagger` — Deployment script: pulls code, syncs config, pulls images, restarts containers
 - `config/home-assistant/` — Home Assistant configuration (currently disabled in compose)
@@ -50,8 +51,8 @@ docker compose ps                # Check running services
 docker compose down              # Stop all services
 
 # Apply Tailscale Services config (run on dagger after deploy)
-sudo tailscale serve set --config /home/media/tailscale/serve.json
-sudo tailscale serve status
+/home/media/tailscale/apply-serve
+sudo tailscale serve status --json | jq
 ```
 
 ## Environment Variables

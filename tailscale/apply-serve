@@ -1,0 +1,39 @@
+#!/bin/bash
+# Configure Tailscale Services for the media server stack.
+#
+# Run on dagger after a deploy or when adding/changing services.
+# Idempotent: re-running replaces the in-memory config with what's defined here.
+#
+# Why imperative instead of `tailscale serve set-config`?
+# As of tailscale 1.96.x the declarative JSON format does NOT enable TLS
+# termination — `tcp:443` listeners come up as plain HTTP. Only `--https=443`
+# (this script's form) flips the listener to "HTTPS: true" so Tailscale
+# terminates TLS with the auto-issued Let's Encrypt cert. File a Tailscale
+# issue when the declarative format catches up.
+
+set -euo pipefail
+
+if [[ $EUID -ne 0 ]]; then
+  exec sudo -E "$0" "$@"
+fi
+
+declare -A SERVICES=(
+  [sonarr]=8989
+  [radarr]=7878
+  [lidarr]=8686
+  [sabnzbd]=8081
+  [plex]=32400
+  [traefik]=8080
+)
+
+tailscale serve reset
+
+for svc in "${!SERVICES[@]}"; do
+  port="${SERVICES[$svc]}"
+  echo "Configuring svc:$svc → http://127.0.0.1:$port"
+  tailscale serve --service="svc:$svc" --bg --https=443 "http://127.0.0.1:$port" >/dev/null
+done
+
+echo
+tailscale serve status --json \
+  | jq -r '.Services | to_entries[] | "\(.key)\t→ \(.value.Web | to_entries[0].value.Handlers."/".Proxy)\tHTTPS=\(.value.TCP."443".HTTPS)"'
