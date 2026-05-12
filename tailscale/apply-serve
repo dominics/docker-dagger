@@ -23,6 +23,8 @@ declare -A SERVICES=(
   [lidarr]=8686
   [prowlarr]=9696
   [sabnzbd]=8081
+  [nzbdav]=3000
+  [usenetstreamer]=7005
   [plex]=32400
   [traefik]=8080
 )

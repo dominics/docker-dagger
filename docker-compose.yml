@@ -82,6 +82,47 @@ services:
 #    labels:
 #      traefik.frontend.rule: Host:nzbget.media.varspool.com
 
+  # nzbdav: Usenet-as-WebDAV. Mounts NZBs without downloading; exposes a
+  # SABnzbd-compatible API for the *arrs and a WebDAV endpoint for streaming
+  # (used by Stremio's UsenetStreamer addon). See github.com/nzbdav-dev/nzbdav.
+  # An optional rclone sidecar can mount the WebDAV onto the host filesystem
+  # so Sonarr/Radarr can import files directly; not enabled yet (Stremio path
+  # doesn't need it).
+  # Exposed on the LAN IP (not just loopback) because the LAN-only TV running
+  # Stremio needs to reach the WebDAV stream URLs directly — it can't be on
+  # the tailnet. nzbdav's built-in username/password is the only auth on the
+  # LAN side; loopback binding stays for Tailscale Serve to off-LAN clients.
+  nzbdav:
+    image: ghcr.io/nzbdav-dev/nzbdav:latest
+    ports:
+      - "127.0.0.1:3000:3000"
+      - "${LOCAL_IP}:3000:3000"
+    volumes:
+      - ${CONFIG_DIR}/nzbdav:/config
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ:   ${TZ}
+    restart: unless-stopped
+
+  # Self-hosted Stremio addon that wraps Prowlarr (indexer search) + nzbdav
+  # (WebDAV streaming) into a Stremio /stream endpoint. Indexer + nzbdav creds
+  # are entered via the admin UI at /<secret>/admin/ — the secret is the only
+  # auth on the manifest URL the TV uses, so don't share it. Container talks
+  # to nzbdav over the compose network as http://nzbdav:3000.
+  usenetstreamer:
+    image: ghcr.io/iceblinker/usenetstreamer:latest
+    ports:
+      - "127.0.0.1:7005:7005"
+      - "${LOCAL_IP}:7005:7005"
+    environment:
+      PORT: 7005
+      ADDON_SHARED_SECRET: ${USENETSTREAMER_SECRET:?Need to set USENETSTREAMER_SECRET in .env}
+      CONFIG_DIR: /data/config
+    volumes:
+      - ${CONFIG_DIR}/usenetstreamer:/data/config
+    restart: unless-stopped
+
   sabnzbd:
     image: lscr.io/linuxserver/sabnzbd
     ports:
