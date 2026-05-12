@@ -4,12 +4,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Docker Compose stack for a home media server running on a host called "dagger" (`media.varspool.com`). Services include Sonarr, Radarr, SABnzbd, qBittorrent, Plex (with NVIDIA GPU transcoding), and Traefik as a reverse proxy.
+Docker Compose stack for a home media server running on a host called "dagger" (`media.varspool.com`). Services include Sonarr, Radarr, Lidarr, Prowlarr, SABnzbd, Plex (with NVIDIA GPU transcoding), and Traefik as a reverse proxy.
 
 ## Architecture
 
 - **Tailscale Services** provide HTTPS for the media web UIs. The host's existing
-  `tailscaled` advertises `svc:sonarr`, `svc:radarr`, `svc:lidarr`, `svc:sabnzbd`,
+  `tailscaled` advertises `svc:sonarr`, `svc:radarr`, `svc:lidarr`, `svc:prowlarr`, `svc:sabnzbd`,
   `svc:plex`, `svc:traefik` per `tailscale/serve.json`. Each gets an auto-issued Let's
   Encrypt cert on `<svc>.<tailnet>.ts.net`. Containers bind to `127.0.0.1:PORT`; Tailscale
   Serve terminates TLS on the tailnet side.

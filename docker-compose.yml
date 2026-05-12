@@ -55,6 +55,18 @@ services:
       TZ:   ${TZ}
     restart: unless-stopped
 
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    ports:
+      - "127.0.0.1:9696:9696"
+    volumes:
+      - ${CONFIG_DIR}/prowlarr:/config
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ:   ${TZ}
+    restart: unless-stopped
+
 #  nzbget:
 #    image: linuxserver/nzbget
 #    ports:
