@@ -110,8 +110,9 @@ services:
   # are entered via the admin UI at /<secret>/admin/ — the secret is the only
   # auth on the manifest URL the TV uses, so don't share it. Container talks
   # to nzbdav over the compose network as http://nzbdav:3000.
+  # Using upstream Sanket9225 image (iceblinker fork has no published image).
   usenetstreamer:
-    image: ghcr.io/iceblinker/usenetstreamer:latest
+    image: ghcr.io/sanket9225/usenetstreamer:latest
     ports:
       - "127.0.0.1:7005:7005"
       - "${LOCAL_IP}:7005:7005"
