@@ -10,6 +10,16 @@
 # (this script's form) flips the listener to "HTTPS: true" so Tailscale
 # terminates TLS with the auto-issued Let's Encrypt cert. File a Tailscale
 # issue when the declarative format catches up.
+#
+# Adding a NEW svc:* needs three prereqs before this script will route:
+#   1. Create the VIP service object — admin UI at /admin/services or
+#      `PUT /api/v2/tailnet/-/vip-services/svc:NAME` body {ports:["tcp:443"]}.
+#      Allocates the 100.x CIDR; without this DNS returns nothing.
+#   2. Add `svc:NAME: ["tag:media-host"]` to ACL `autoApprovers.services`
+#      AND to the `grants[].dst` array (approve host + allow tailnet members).
+#   3. Run this script, then `sudo systemctl restart tailscaled` — a serve
+#      reset+advertise alone does NOT re-handshake binding to a freshly-created
+#      VIP service object; the daemon restart does.
 
 set -euo pipefail
 
