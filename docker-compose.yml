@@ -123,23 +123,41 @@ services:
       TZ:   ${TZ}
     restart: unless-stopped
 
-  # Self-hosted Stremio addon that wraps Prowlarr (indexer search) + nzbdav
-  # (WebDAV streaming) into a Stremio /stream endpoint. Indexer + nzbdav creds
-  # are entered via the admin UI at /<secret>/admin/ — the secret is the only
-  # auth on the manifest URL the TV uses, so don't share it. Container talks
-  # to nzbdav over the compose network as http://nzbdav:3000.
-  # Using upstream Sanket9225 image (iceblinker fork has no published image).
-  usenetstreamer:
-    image: ghcr.io/sanket9225/usenetstreamer:latest
+  # Self-hosted AIOStreams — Stremio aggregator wired to our own nzbdav (usenet streaming)
+  # + Prowlarr (indexers), replacing usenetstreamer. TWO instances because AIOStreams
+  # builds every stream URL from a single BASE_URL (no request-host derivation): the TV
+  # has no Tailscale client (LAN HTTP only), while the roaming phone reaches it over the
+  # tailnet. Both share wiring via *aiostreams-env; behavioural config is set per-instance
+  # in the UI (separate SQLite volumes).
+  #
+  # Usenet-IP guarantee: nzbdav holds the NNTP creds and does the fetching, so the provider
+  # only ever sees dagger. nzbdav.aiostreamsAuth (in AIOSTREAMS_FORCED_SERVICE_CREDENTIALS)
+  # forces the built-in proxy, keeping WebDAV creds out of the URLs handed to clients.
+  aiostreams-lan:
+    image: ghcr.io/viren070/aiostreams:latest
     ports:
-      - "127.0.0.1:7005:7005"
-      - "${LOCAL_IP}:7005:7005"
+      - "127.0.0.1:8083:3000"
+      - "${LOCAL_IP}:8083:3000"
     environment:
-      PORT: 7005
-      ADDON_SHARED_SECRET: ${USENETSTREAMER_SECRET:?Need to set USENETSTREAMER_SECRET in .env}
-      CONFIG_DIR: /data/config
+      <<: *aiostreams-env
+      BASE_URL: "http://${LOCAL_IP}:8083"
+      DATABASE_URI: "sqlite:///app/data/db.sqlite"
     volumes:
-      - ${CONFIG_DIR}/usenetstreamer:/data/config
+      - ${CONFIG_DIR}/aiostreams-lan:/app/data
+    restart: unless-stopped
+
+  # Tailnet instance for the roaming phone. Loopback-only bind; Tailscale Serve
+  # (svc:aiostreams) terminates HTTPS and proxies to 127.0.0.1:8084.
+  aiostreams-ts:
+    image: ghcr.io/viren070/aiostreams:latest
+    ports:
+      - "127.0.0.1:8084:3000"
+    environment:
+      <<: *aiostreams-env
+      BASE_URL: "https://aiostreams.royal-shark.ts.net"
+      DATABASE_URI: "sqlite:///app/data/db.sqlite"
+    volumes:
+      - ${CONFIG_DIR}/aiostreams-ts:/app/data
     restart: unless-stopped
 
   sabnzbd:
