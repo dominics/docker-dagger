@@ -42,9 +42,26 @@ providers:
     watch: true
 
 certificatesResolvers:
+  # HTTP-01 for the public statio.nz route (validated by hitting :80 from the internet).
   letsencrypt:
     acme:
       email: dominic@varspool.com
       storage: /etc/traefik/acme/acme.json
       httpChallenge:
         entryPoint: web
+
+  # DNS-01 (Route53) for internal-only hosts whose names resolve to a private IP
+  # (e.g. aiostreams.media.varspool.com → 192.168.1.200), which HTTP-01 can't validate.
+  # Creds come from the AWS_* env vars on the traefik service (lego route53 provider).
+  # Separate storage file avoids write races between the two resolvers. A static-config
+  # change → full Traefik restart required (not just a dynamic.yml reload).
+  letsencrypt-dns:
+    acme:
+      email: dominic@varspool.com
+      storage: /etc/traefik/acme/acme-dns.json
+      dnsChallenge:
+        provider: route53
+        # Check the TXT record via public resolvers, not LAN split-horizon DNS.
+        resolvers:
+          - "1.1.1.1:53"
+          - "8.8.8.8:53"

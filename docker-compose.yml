@@ -29,6 +29,13 @@ services:
       - ./traefik.yml:/etc/traefik/traefik.yml:ro
       - ./dynamic.yml:/etc/traefik/dynamic.yml:ro
       - traefik-acme:/etc/traefik/acme
+    environment:
+      # Route53 DNS-01 challenge creds for the letsencrypt-dns resolver (lego route53
+      # provider). Least-priv IAM user traefik-acme-route53 (terraform/varspool/iam.tf).
+      AWS_ACCESS_KEY_ID:     ${AWS_ACCESS_KEY_ID:?Set AWS_ACCESS_KEY_ID for Route53 DNS-01}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:?Set AWS_SECRET_ACCESS_KEY for Route53 DNS-01}
+      AWS_REGION:            ${AWS_REGION:-us-east-1}
+      AWS_HOSTED_ZONE_ID:    ${AWS_HOSTED_ZONE_ID:?Set the varspool.com Route53 hosted zone ID}
     restart: unless-stopped
 
   sonarr:
@@ -136,16 +143,17 @@ services:
   # forces the built-in proxy, keeping WebDAV creds out of the URLs handed to clients.
   aiostreams-lan:
     image: ghcr.io/viren070/aiostreams:latest
-    ports:
-      - "127.0.0.1:8083:3000"
-      - "${LOCAL_IP}:8083:3000"
+    # No host port publish: Traefik is the sole ingress, reaching this over the compose
+    # network at http://aiostreams-lan:3000. Dropping the LAN bind also removes the
+    # plain-HTTP exposure — clients must use the trusted-HTTPS Traefik endpoint, which
+    # browser-based Stremio requires (an http addon is blocked as mixed content).
     environment:
       <<: *aiostreams-env
-      # Hostname, not the bare IP: some Stremio clients reject a private-IP literal in
-      # the manifest/stream URLs. media.varspool.com resolves to ${LOCAL_IP} on the LAN,
-      # so this still hits this same :8083 bind — no Tailscale/Traefik involved. BASE_URL
-      # is baked into the proxied stream URLs, so it must match what the client will use.
-      BASE_URL: "http://media.varspool.com:8083"
+      # Trusted HTTPS via Traefik (Let's Encrypt over Route53 DNS-01). The name resolves
+      # to ${LOCAL_IP} on the LAN, so traffic stays internal; Traefik terminates TLS and
+      # proxies to this container. BASE_URL is baked into the proxied stream/manifest URLs,
+      # so it must match exactly what the client will use.
+      BASE_URL: "https://aiostreams.media.varspool.com"
       DATABASE_URI: "sqlite:///app/data/db.sqlite"
     volumes:
       - ${CONFIG_DIR}/aiostreams-lan:/app/data

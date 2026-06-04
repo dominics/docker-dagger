@@ -29,11 +29,31 @@ http:
         - geoblock-nz
         - www-to-bare
 
+    # Internal-only HTTPS for the self-hosted AIOStreams LAN instance. Browser-based
+    # Stremio blocks a plain-HTTP addon as mixed content, so it needs a trusted cert.
+    # Cert via the letsencrypt-dns resolver (Route53 DNS-01) because the name resolves
+    # to a private IP. Gated to LAN/tailnet by the tailscale-only middleware — never
+    # public, despite the public DNS record.
+    aiostreams:
+      rule: "Host(`aiostreams.media.varspool.com`)"
+      service: aiostreams-lan
+      entryPoints:
+        - websecure
+      middlewares:
+        - tailscale-only
+      tls:
+        certResolver: letsencrypt-dns
+
   services:
     cdn-station:
       loadBalancer:
         servers:
           - url: "http://192.168.1.200:8181"
+
+    aiostreams-lan:
+      loadBalancer:
+        servers:
+          - url: "http://aiostreams-lan:3000"
 
   middlewares:
     # NZ-only allowlist for the public statio.nz route. Uses the PascalMinder/geoblock
