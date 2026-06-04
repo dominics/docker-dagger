@@ -141,7 +141,11 @@ services:
       - "${LOCAL_IP}:8083:3000"
     environment:
       <<: *aiostreams-env
-      BASE_URL: "http://${LOCAL_IP}:8083"
+      # Hostname, not the bare IP: some Stremio clients reject a private-IP literal in
+      # the manifest/stream URLs. media.varspool.com resolves to ${LOCAL_IP} on the LAN,
+      # so this still hits this same :8083 bind — no Tailscale/Traefik involved. BASE_URL
+      # is baked into the proxied stream URLs, so it must match what the client will use.
+      BASE_URL: "http://media.varspool.com:8083"
       DATABASE_URI: "sqlite:///app/data/db.sqlite"
     volumes:
       - ${CONFIG_DIR}/aiostreams-lan:/app/data
