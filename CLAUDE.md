@@ -4,20 +4,22 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Docker Compose stack for a home media server running on a host called "dagger" (`media.varspool.com`). Services include Sonarr, Radarr, Lidarr, Prowlarr, SABnzbd, nzbdav (usenet-as-WebDAV for streaming), UsenetStreamer (Stremio addon over nzbdav + Prowlarr), Plex (with NVIDIA GPU transcoding), and Traefik as a reverse proxy.
+Docker Compose stack for a home media server running on a host called "dagger" (`media.varspool.com`). Services include Sonarr, Radarr, Lidarr, Prowlarr, SABnzbd, nzbdav (usenet-as-WebDAV for streaming), AIOStreams (self-hosted Stremio aggregator over nzbdav + Prowlarr, LAN + tailnet instances), Plex (with NVIDIA GPU transcoding), and Traefik as a reverse proxy.
 
 ## Architecture
 
 - **Tailscale Services** provide HTTPS for the media web UIs. The host's existing
   `tailscaled` advertises `svc:sonarr`, `svc:radarr`, `svc:lidarr`, `svc:prowlarr`, `svc:sabnzbd`,
-  `svc:nzbdav`, `svc:usenetstreamer`, `svc:plex`, `svc:traefik` per `tailscale/apply-serve`.
+  `svc:nzbdav`, `svc:aiostreams`, `svc:plex`, `svc:traefik` per `tailscale/apply-serve`.
   Each gets an auto-issued Let's Encrypt cert on `<svc>.<tailnet>.ts.net`. Containers bind
   to `127.0.0.1:PORT`; Tailscale Serve terminates TLS on the tailnet side.
-- **LAN-exposed services**: `nzbdav` (3000) and `usenetstreamer` (7005) are also
+- **LAN-exposed services**: `nzbdav` (3000) and `aiostreams-lan` (8083) are also
   bound to `${LOCAL_IP}` because Stremio runs on a TV that's LAN-only (no tailnet
-  client). nzbdav uses its own username/pass; usenetstreamer is gated by
-  `ADDON_SHARED_SECRET` in the manifest URL path. No public exposure — unreachable
-  off-LAN/off-tailnet.
+  client). The roaming phone uses a second instance, `aiostreams-ts`, over the tailnet
+  (`svc:aiostreams`, loopback 8084) — needed because AIOStreams bakes a single
+  `BASE_URL` into every stream URL. Usenet streams proxy through AIOStreams' built-in
+  proxy (nzbdav holds the NNTP creds on dagger), so the usenet account is only ever
+  used from the home IP. No public exposure.
 - **Plex** runs in `host` network mode with `nvidia` runtime, so it's reachable on the LAN
   at `192.168.1.200:32400` *without* Tailscale (TVs, Sonos, guest phones). `svc:plex` is
   additive on top for tailnet HTTPS.
@@ -65,8 +67,11 @@ sudo tailscale serve status --json | jq
 All required in `.env` (see `.env.example`):
 - `PUID` / `PGID` — UID/GID for LinuxServer.io containers
 - `TZ` — Timezone (e.g. `Pacific/Auckland`)
-- `LOCAL_IP` — LAN IP of dagger, used to bind LAN-only services (nzbdav, usenetstreamer)
-- `USENETSTREAMER_SECRET` — path-token for the UsenetStreamer Stremio addon
+- `LOCAL_IP` — LAN IP of dagger, used to bind LAN-only services (nzbdav, aiostreams-lan)
+- `AIOSTREAMS_SECRET_KEY` / `AIOSTREAMS_AUTH` / `AIOSTREAMS_PROXY_CREDENTIALS` /
+  `AIOSTREAMS_FORCED_SERVICE_CREDENTIALS` / `PROWLARR_API_KEY` — AIOStreams encryption
+  key, UI login, built-in-proxy creds, locked nzbdav usenet wiring, and the Prowlarr API
+  key. See `.env.example` for formats.
 - `CONFIG_DIR` / `STORAGE_DIR` — Set in `deploy-dagger` to `/etc/media-server` and `/media/storage`
 
 ## Conventions
