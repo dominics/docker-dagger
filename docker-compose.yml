@@ -106,17 +106,16 @@ services:
   # An optional rclone sidecar can mount the WebDAV onto the host filesystem
   # so Sonarr/Radarr can import files directly; not enabled yet (Stremio path
   # doesn't need it).
-  # Bound to loopback (Tailscale Serve / svc:nzbdav) and the LAN IP. The *arrs reach
-  # nzbdav over the compose network (http://nzbdav:3000), and under AIOStreams the TV's
-  # Stremio streams flow through the aiostreams-lan built-in proxy — which fetches from
-  # nzbdav internally — so nzbdav no longer needs LAN exposure for streaming. The LAN
-  # binding is retained only for direct LAN access to nzbdav's UI/WebDAV and can be
-  # dropped if unused. nzbdav's username/password is the only auth on the LAN side.
+  # Bound to loopback only; reached over the tailnet via svc:nzbdav and over the compose
+  # network by the *arrs (http://nzbdav:3000) and AIOStreams. No LAN binding: under
+  # AIOStreams the TV's Stremio streams flow through the aiostreams-lan built-in proxy
+  # (which fetches from nzbdav internally), so nzbdav is never exposed on the LAN — the
+  # usenet WebDAV is only reachable from dagger itself or the tailnet. nzbdav's built-in
+  # username/password is the auth for the loopback/tailnet side.
   nzbdav:
     image: ghcr.io/nzbdav-dev/nzbdav:latest
     ports:
       - "127.0.0.1:3000:3000"
-      - "${LOCAL_IP}:3000:3000"
     volumes:
       - ${CONFIG_DIR}/nzbdav:/config
     environment:
