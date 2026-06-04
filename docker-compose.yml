@@ -6,14 +6,14 @@ x-aiostreams-env: &aiostreams-env
   AIOSTREAMS_AUTH_ADMINS: ${AIOSTREAMS_AUTH_ADMINS:-}
   # Locked usenet wiring (nzbdav.* incl. aiostreamsAuth, which enables the built-in proxy
   # so WebDAV creds never appear in client stream URLs and bytes egress from dagger).
-  FORCED_SERVICE_CREDENTIALS: ${AIOSTREAMS_FORCED_SERVICE_CREDENTIALS:-}
+  FORCED_SERVICE_CREDENTIALS: ${AIOSTREAMS_FORCED_SERVICE_CREDENTIALS:?Set the locked nzbdav usenet wiring (see .env.example) — empty would disengage the built-in proxy and leak WebDAV creds into stream URLs}
   # Indexer search over the compose network.
   BUILTIN_PROWLARR_URL: "http://prowlarr:9696"
   BUILTIN_PROWLARR_API_KEY: ${PROWLARR_API_KEY:?Need to set PROWLARR_API_KEY}
   # Force the built-in proxy for debrid/torrent streams too (egress from dagger).
   FORCE_PROXY_ENABLED: "true"
   FORCE_PROXY_ID: "builtin"
-  FORCE_PROXY_CREDENTIALS: ${AIOSTREAMS_PROXY_CREDENTIALS:-}
+  FORCE_PROXY_CREDENTIALS: ${AIOSTREAMS_PROXY_CREDENTIALS:?Set a user:pass from AIOSTREAMS_AUTH for the built-in proxy}
   TZ: ${TZ}
 
 services:
@@ -106,10 +106,12 @@ services:
   # An optional rclone sidecar can mount the WebDAV onto the host filesystem
   # so Sonarr/Radarr can import files directly; not enabled yet (Stremio path
   # doesn't need it).
-  # Exposed on the LAN IP (not just loopback) because the LAN-only TV running
-  # Stremio needs to reach the WebDAV stream URLs directly — it can't be on
-  # the tailnet. nzbdav's built-in username/password is the only auth on the
-  # LAN side; loopback binding stays for Tailscale Serve to off-LAN clients.
+  # Bound to loopback (Tailscale Serve / svc:nzbdav) and the LAN IP. The *arrs reach
+  # nzbdav over the compose network (http://nzbdav:3000), and under AIOStreams the TV's
+  # Stremio streams flow through the aiostreams-lan built-in proxy — which fetches from
+  # nzbdav internally — so nzbdav no longer needs LAN exposure for streaming. The LAN
+  # binding is retained only for direct LAN access to nzbdav's UI/WebDAV and can be
+  # dropped if unused. nzbdav's username/password is the only auth on the LAN side.
   nzbdav:
     image: ghcr.io/nzbdav-dev/nzbdav:latest
     ports:

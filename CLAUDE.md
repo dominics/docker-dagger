@@ -68,10 +68,11 @@ All required in `.env` (see `.env.example`):
 - `PUID` / `PGID` — UID/GID for LinuxServer.io containers
 - `TZ` — Timezone (e.g. `Pacific/Auckland`)
 - `LOCAL_IP` — LAN IP of dagger, used to bind LAN-only services (nzbdav, aiostreams-lan)
-- `AIOSTREAMS_SECRET_KEY` / `AIOSTREAMS_AUTH` / `AIOSTREAMS_PROXY_CREDENTIALS` /
-  `AIOSTREAMS_FORCED_SERVICE_CREDENTIALS` / `PROWLARR_API_KEY` — AIOStreams encryption
-  key, UI login, built-in-proxy creds, locked nzbdav usenet wiring, and the Prowlarr API
-  key. See `.env.example` for formats.
+- `AIOSTREAMS_SECRET_KEY` / `AIOSTREAMS_AUTH` / `AIOSTREAMS_AUTH_ADMINS` /
+  `AIOSTREAMS_PROXY_CREDENTIALS` / `AIOSTREAMS_FORCED_SERVICE_CREDENTIALS` /
+  `PROWLARR_API_KEY` — AIOStreams encryption key, UI login, admin usernames,
+  built-in-proxy creds, locked nzbdav usenet wiring, and the Prowlarr API key.
+  See `.env.example` for formats.
 - `CONFIG_DIR` / `STORAGE_DIR` — Set in `deploy-dagger` to `/etc/media-server` and `/media/storage`
 
 ## Conventions
