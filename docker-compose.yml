@@ -102,7 +102,7 @@ services:
 
   # nzbdav: Usenet-as-WebDAV. Mounts NZBs without downloading; exposes a
   # SABnzbd-compatible API for the *arrs and a WebDAV endpoint for streaming
-  # (used by Stremio's UsenetStreamer addon). See github.com/nzbdav-dev/nzbdav.
+  # (used by AIOStreams for Stremio streaming). See github.com/nzbdav-dev/nzbdav.
   # An optional rclone sidecar can mount the WebDAV onto the host filesystem
   # so Sonarr/Radarr can import files directly; not enabled yet (Stremio path
   # doesn't need it).
