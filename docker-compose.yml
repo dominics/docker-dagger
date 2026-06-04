@@ -1,3 +1,21 @@
+# Shared environment for both AIOStreams instances (LAN + tailnet). Anchored so the two
+# services stay in lock-step on wiring; only BASE_URL / DB path / published port differ.
+x-aiostreams-env: &aiostreams-env
+  SECRET_KEY: ${AIOSTREAMS_SECRET_KEY:?Need to set AIOSTREAMS_SECRET_KEY (openssl rand -hex 32)}
+  AIOSTREAMS_AUTH: ${AIOSTREAMS_AUTH:?Need to set AIOSTREAMS_AUTH (user:pass)}
+  AIOSTREAMS_AUTH_ADMINS: ${AIOSTREAMS_AUTH_ADMINS:-}
+  # Locked usenet wiring (nzbdav.* incl. aiostreamsAuth, which enables the built-in proxy
+  # so WebDAV creds never appear in client stream URLs and bytes egress from dagger).
+  FORCED_SERVICE_CREDENTIALS: ${AIOSTREAMS_FORCED_SERVICE_CREDENTIALS:-}
+  # Indexer search over the compose network.
+  BUILTIN_PROWLARR_URL: "http://prowlarr:9696"
+  BUILTIN_PROWLARR_API_KEY: ${PROWLARR_API_KEY:?Need to set PROWLARR_API_KEY}
+  # Force the built-in proxy for debrid/torrent streams too (egress from dagger).
+  FORCE_PROXY_ENABLED: "true"
+  FORCE_PROXY_ID: "builtin"
+  FORCE_PROXY_CREDENTIALS: ${AIOSTREAMS_PROXY_CREDENTIALS:-}
+  TZ: ${TZ}
+
 services:
   traefik:
     image: traefik:v3.6
