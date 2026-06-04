@@ -1,6 +1,15 @@
 log:
   level: INFO
 
+# NZ-only geoblock plugin for the public statio.nz route (middleware defined in
+# dynamic.yml as `geoblock-nz`). Static config — a Traefik restart is required to
+# download/load the plugin (a dynamic.yml file-watch reload is not enough).
+experimental:
+  plugins:
+    geoblock:
+      moduleName: github.com/PascalMinder/geoblock
+      version: v0.3.7
+
 # Dashboard is reached via svc:traefik (Tailscale Service) on the loopback :8080 bind.
 # `insecure: true` enables the built-in :8080 listener — only safe because the container
 # port is bound to 127.0.0.1 in docker-compose.yml.

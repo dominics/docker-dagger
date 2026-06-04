@@ -11,6 +11,8 @@ http:
               - "www.statio.nz"
       entryPoints:
         - websecure
+      middlewares:
+        - geoblock-nz
 
     cdn-station-www:
       rule: "Host(`www.statio.nz`)"
@@ -24,6 +26,7 @@ http:
       entryPoints:
         - websecure
       middlewares:
+        - geoblock-nz
         - www-to-bare
 
   services:
@@ -33,6 +36,28 @@ http:
           - url: "http://192.168.1.200:8181"
 
   middlewares:
+    # NZ-only allowlist for the public statio.nz route. Uses the PascalMinder/geoblock
+    # plugin (registered in traefik.yml). allowLocalRequests keeps LAN/Tailscale ops
+    # paths working; country lookups go to get.geojs.io (cached).
+    geoblock-nz:
+      plugin:
+        geoblock:
+          silentStartUp: false
+          allowLocalRequests: true
+          logLocalRequests: false
+          logAllowedRequests: false
+          logApiRequests: false
+          api: "https://get.geojs.io/v1/ip/country/{ip}"
+          apiTimeoutMs: 750
+          cacheSize: 100
+          forceMonthlyUpdate: true
+          allowUnknownCountries: false
+          unknownCountryApiResponse: "nil"
+          blackListMode: false
+          addCountryHeader: false
+          countries:
+            - NZ
+
     www-to-bare:
       redirectRegex:
         regex: "^https://www\\.statio\\.nz/(.*)"
