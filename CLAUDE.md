@@ -77,10 +77,16 @@ All required in `.env` (see `.env.example`):
 - `TZ` — Timezone (e.g. `Pacific/Auckland`)
 - `LOCAL_IP` — LAN IP of dagger; the name `*.media.varspool.com` resolves here on the LAN
 - `AIOSTREAMS_SECRET_KEY` / `AIOSTREAMS_AUTH` / `AIOSTREAMS_AUTH_ADMINS` /
-  `AIOSTREAMS_PROXY_CREDENTIALS` / `AIOSTREAMS_FORCED_SERVICE_CREDENTIALS` /
-  `PROWLARR_API_KEY` — AIOStreams encryption key, UI login, admin usernames,
-  built-in-proxy creds, locked nzbdav usenet wiring, and the Prowlarr API key.
-  See `.env.example` for formats.
+  `AIOSTREAMS_PROXY_CREDENTIALS` / `PROWLARR_API_KEY` — AIOStreams encryption key, UI login,
+  admin usernames, built-in-proxy creds, and the Prowlarr API key. See `.env.example`.
+- **nzbdav creds are NOT in `.env`** — they're configured per-config in each AIOStreams
+  instance's dashboard UI (url=`http://nzbdav:3000`, apiKey, WebDAV user/pass, Auth Token).
+  AIOStreams v2.30.2 has a bug where env-injected service creds (`*_SERVICE_CREDENTIALS`) are
+  stored encrypted and never decrypted at resolve → "Invalid URL" / 21KB placeholder on usenet
+  streams; typed-in-UI creds decrypt fine. The home-IP guarantee is independent (FORCE_PROXY
+  routes everything through the built-in proxy). UI config lives in
+  `$CONFIG_DIR/aiostreams-*/db.sqlite` (per instance) — re-do it on a fresh deploy. nzbdav's
+  own usenet providers (giganews, astraweb, xsnews, vipernews) live in nzbdav's `/config` DB.
 - `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` / `AWS_REGION` / `AWS_HOSTED_ZONE_ID` —
   Route53 DNS-01 creds for Traefik's `letsencrypt-dns` resolver (internal HTTPS for
   `aiostreams.media.varspool.com`). Least-priv IAM user `traefik-acme-route53`

@@ -4,9 +4,14 @@ x-aiostreams-env: &aiostreams-env
   SECRET_KEY: ${AIOSTREAMS_SECRET_KEY:?Need to set AIOSTREAMS_SECRET_KEY (openssl rand -hex 32)}
   AIOSTREAMS_AUTH: ${AIOSTREAMS_AUTH:?Need to set AIOSTREAMS_AUTH (user:pass)}
   AIOSTREAMS_AUTH_ADMINS: ${AIOSTREAMS_AUTH_ADMINS:-}
-  # Locked usenet wiring (nzbdav.* incl. aiostreamsAuth, which enables the built-in proxy
-  # so WebDAV creds never appear in client stream URLs and bytes egress from dagger).
-  FORCED_SERVICE_CREDENTIALS: ${AIOSTREAMS_FORCED_SERVICE_CREDENTIALS:?Set the locked nzbdav usenet wiring (see .env.example) — empty would disengage the built-in proxy and leak WebDAV creds into stream URLs}
+  # NOTE: nzbdav credentials are NOT injected here. AIOStreams v2.30.2 stores env-supplied
+  # service credentials (FORCED_SERVICE_CREDENTIALS / DEFAULT_SERVICE_CREDENTIALS) *encrypted*
+  # and fails to decrypt them at resolve time — the ciphertext reaches `new URL()` → throws
+  # "Invalid URL" → usenet plays a 21KB placeholder. Workaround: enter the nzbdav service
+  # creds (url=http://nzbdav:3000, apiKey, WebDAV user/pass, aiostreamsAuth) by hand in each
+  # AIOStreams config's UI — typed plaintext is encrypted once and decrypts cleanly. The
+  # home-IP usenet guarantee does NOT depend on this: FORCE_PROXY_* below forces every stream
+  # (incl. usenet) through the built-in proxy regardless. See CLAUDE.md / .env.example.
   # Indexer search over the compose network.
   BUILTIN_PROWLARR_URL: "http://prowlarr:9696"
   BUILTIN_PROWLARR_API_KEY: ${PROWLARR_API_KEY:?Need to set PROWLARR_API_KEY}
@@ -139,8 +144,9 @@ services:
   # in the UI (separate SQLite volumes).
   #
   # Usenet-IP guarantee: nzbdav holds the NNTP creds and does the fetching, so the provider
-  # only ever sees dagger. nzbdav.aiostreamsAuth (in AIOSTREAMS_FORCED_SERVICE_CREDENTIALS)
-  # forces the built-in proxy, keeping WebDAV creds out of the URLs handed to clients.
+  # only ever sees dagger. FORCE_PROXY_ENABLED (above) forces every stream through the
+  # built-in proxy, keeping WebDAV creds out of the URLs handed to clients and ensuring
+  # usenet bytes egress only from dagger — independent of the per-config nzbdav.aiostreamsAuth.
   aiostreams-lan:
     image: ghcr.io/viren070/aiostreams:latest
     # No host port publish: Traefik is the sole ingress, reaching this over the compose
