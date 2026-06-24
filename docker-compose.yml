@@ -179,6 +179,20 @@ services:
       - ${CONFIG_DIR}/aiostreams-ts:/app/data
     restart: unless-stopped
 
+  # Private Reddit front-end. Exists so xeno.video (on shank) can read Reddit RSS from
+  # dagger's residential IP — Reddit blocks shank's datacenter IP. Loopback-only bind;
+  # Tailscale Serve (svc:redlib) terminates HTTPS at https://redlib.royal-shark.ts.net.
+  # Stateless distroless binary — no PUID/volume. REDLIB_FULL_URL must match the served
+  # URL so RSS emits correct links.
+  redlib:
+    image: quay.io/redlib/redlib
+    ports:
+      - "127.0.0.1:8090:8080"
+    environment:
+      REDLIB_ENABLE_RSS: "on"
+      REDLIB_FULL_URL: "https://redlib.royal-shark.ts.net"
+    restart: unless-stopped
+
   sabnzbd:
     image: lscr.io/linuxserver/sabnzbd
     ports:
