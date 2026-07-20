@@ -38,6 +38,7 @@ declare -A SERVICES=(
   [plex]=32400
   [traefik]=8080
   [redlib]=8090
+  [immich]=2283
 )
 
 tailscale serve reset
