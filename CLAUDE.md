@@ -48,6 +48,11 @@ Docker Compose stack for a home media server running on a host called "dagger" (
   dagger to apply. Uses imperative `tailscale serve --https=443` per service because
   the declarative `set-config` JSON format does not enable TLS termination as of
   tailscale 1.96.x.
+- The tailnet ACL (policy file) is OpenTofu-managed in the `tf-config` repo at
+  `tf-config/tailscale/policy/policy.hujson` (`tailscale_acl` resource). Edit it
+  and `just apply tailscale/policy` there instead of the Tailscale admin console;
+  its `README.md` has the OAuth-client credential and bootstrap/apply runbook.
+  When onboarding a new `svc:*`, prereq #2 in `apply-serve` points here.
 - `.env` / `.env.example` — Environment variables (`PUID`, `PGID`, `TZ`, `LOCAL_IP`)
 - `deploy-dagger` — Deployment script: pulls code, syncs config, pulls images, restarts containers
 - `config/home-assistant/` — Home Assistant configuration (currently disabled in compose)

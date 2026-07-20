@@ -15,8 +15,11 @@
 #   1. Create the VIP service object — admin UI at /admin/services or
 #      `PUT /api/v2/tailnet/-/vip-services/svc:NAME` body {ports:["tcp:443"]}.
 #      Allocates the 100.x CIDR; without this DNS returns nothing.
-#   2. Add `svc:NAME: ["tag:media-host"]` to ACL `autoApprovers.services`
-#      AND to the `grants[].dst` array (approve host + allow tailnet members).
+#   2. Add the service to the tailnet policy file, now OpenTofu-managed in the
+#      tf-config repo at `tf-config/tailscale/policy/policy.hujson` (NOT the
+#      admin console): add `svc:NAME: ["tag:media-host"]` to
+#      `autoApprovers.services` AND to the `grants[].dst` array (approve host +
+#      allow tailnet members), then `just apply tailscale/policy`.
 #   3. Run this script, then `sudo systemctl restart tailscaled` — a serve
 #      reset+advertise alone does NOT re-handshake binding to a freshly-created
 #      VIP service object; the daemon restart does.
