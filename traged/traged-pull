@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# What traged-deploy.service actually runs: pull the current TrageD server image
+# and restart only that service.
+#
+# It exists as a script rather than two ExecStart lines so that an expired
+# registry token explains itself. The image is private, so the pull needs a
+# credential, and a credential that expires is the one predictable way this
+# deploy breaks months from now - at which point nobody will remember any of
+# this. So the failure prints its own fix.
+#
+# Managed by the docker-dagger repo; do not edit on the host.
+
+cd /home/media
+
+log=$(mktemp)
+trap 'rm -f "$log"' EXIT
+
+if ! docker compose pull td-server 2>&1 | tee "$log"; then
+  if grep -qi 'unauthorized\|denied\|authentication required' "$log"; then
+    cat >&2 <<'INSTRUCTIONS'
+
+──────────────────────────────────────────────────────────────────────
+The registry rejected us. The TrageD image is private, so this is almost
+certainly the read:packages token having expired or been revoked.
+
+To rotate it:
+
+  1. Mint a classic PAT with ONLY the `read:packages` scope:
+       https://github.com/settings/tokens/new?scopes=read:packages
+     Give it a long expiry and a name like "dagger ghcr pull".
+
+  2. Install it on this host (reads the token from stdin, writes it
+     root-only to /etc/traged/docker/config.json):
+
+       cd /home/media && printf '%s' '<TOKEN>' | sudo ./traged/set-registry-token
+
+  3. Update the 1Password item "TrageD GHCR pull token (dagger)" in the
+     Private vault, including the new expiry date in its notes.
+
+  4. Re-run the deploy:  gh workflow run deploy   (from a td checkout)
+
+Nothing else is wrong: the container currently running is untouched, and
+the site on sabre is unaffected.
+──────────────────────────────────────────────────────────────────────
+
+INSTRUCTIONS
+  fi
+  exit 1
+fi
+
+# --no-deps so a game deploy never restarts Plex or anything else the house is
+# using; only the one service is replaced.
+exec docker compose up -d --no-deps td-server

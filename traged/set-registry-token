@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Installs the GHCR read token the TrageD deploy uses to pull its private image.
+# Reads the token from stdin so it never appears in a shell history or a process
+# listing:
+#
+#   printf '%s' '<TOKEN>' | sudo ./traged/set-registry-token
+#
+# The credential goes in a directory of its own rather than /root/.docker, so it
+# is scoped to this one deploy and cannot be picked up accidentally by anything
+# else running as root. traged-deploy.service points DOCKER_CONFIG here.
+#
+# Managed by the docker-dagger repo; do not edit on the host.
+
+CONFIG_DIR=/etc/traged/docker
+USER_NAME=dominics
+
+if [ "$(id -u)" -ne 0 ]; then
+  echo "set-registry-token: must run as root (use sudo)" >&2
+  exit 1
+fi
+
+if [ -t 0 ]; then
+  echo "set-registry-token: expects the token on stdin, not as an argument" >&2
+  echo "  printf '%s' '<TOKEN>' | sudo ./traged/set-registry-token" >&2
+  exit 1
+fi
+
+token=$(cat)
+if [ -z "$token" ]; then
+  echo "set-registry-token: empty token on stdin" >&2
+  exit 1
+fi
+
+install -d -m 0700 -o root -g root "$CONFIG_DIR"
+
+# docker login writes config.json itself, which keeps the file's shape whatever
+# the local docker version expects rather than hand-rolling base64 into JSON.
+printf '%s' "$token" | docker --config "$CONFIG_DIR" login ghcr.io \
+  --username "$USER_NAME" --password-stdin
+
+chmod 0600 "$CONFIG_DIR/config.json"
+chown root:root "$CONFIG_DIR/config.json"
+
+echo "Token installed. Verifying it can actually see the image..."
+if docker --config "$CONFIG_DIR" manifest inspect \
+     ghcr.io/dominics/td-server:latest >/dev/null 2>&1; then
+  echo "OK: ghcr.io/dominics/td-server:latest is readable with this token."
+else
+  echo "WARNING: login succeeded but the image is still not readable." >&2
+  echo "Check the token has the read:packages scope." >&2
+  exit 1
+fi
