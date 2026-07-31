@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Forced command for the TrageD CI deploy key. sshd puts the client's requested
+# command in $SSH_ORIGINAL_COMMAND; this script accepts exactly one word and
+# rejects everything else, so a leaked CI secret can roll the game server and
+# nothing more. No shell, no port forwarding, no path or argument from the
+# caller.
+#
+# Installed by traged/install-deploy-account (run from deploy-dagger).
+# Managed by the docker-dagger repo; do not edit on the host.
+
+case "${SSH_ORIGINAL_COMMAND:-}" in
+  "deploy")
+    # One fixed unit, no arguments. The deploy account is deliberately NOT in the
+    # docker group — that is root on this host by another name, and this box has
+    # the household's media on it. The privileged half is a systemd oneshot that
+    # sudoers permits by exact command.
+    exec /usr/bin/sudo -n /usr/bin/systemctl start --wait traged-deploy.service
+    ;;
+  *)
+    echo "traged-ci-deploy: rejected command" >&2
+    exit 1
+    ;;
+esac

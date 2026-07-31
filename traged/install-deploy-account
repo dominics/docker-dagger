@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Installs the account GitHub Actions (dominics/td) uses to roll the TrageD game
+# server on this host. Idempotent — deploy-dagger runs it on every deploy.
+#
+# dagger is deliberately outside the ansible inventory, so this repo owns the
+# account rather than roles/traged_deploy. The shape is the same one
+# ansible uses on sabre and shank: a forced-command SSH key, and a systemd
+# oneshot for the one privileged step, so the account itself never needs the
+# docker group.
+
+here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+USER_NAME=traged-deploy
+WRAPPER=/usr/local/bin/traged-ci-deploy
+PUBKEY_FILE="$here/traged-ci.pub"
+
+if [ ! -s "$PUBKEY_FILE" ]; then
+  echo "install-deploy-account: $PUBKEY_FILE missing or empty" >&2
+  exit 1
+fi
+
+echo "Installing the TrageD CI deploy account"
+
+if ! getent group "$USER_NAME" >/dev/null; then
+  sudo groupadd --system "$USER_NAME"
+fi
+
+if ! id -u "$USER_NAME" >/dev/null 2>&1; then
+  # A real shell is required: sshd runs the forced command through the login
+  # shell. The confinement is the forced command plus `restrict`, not the shell.
+  # No password, and deliberately no docker group.
+  sudo useradd --create-home --shell /bin/bash \
+    --gid "$USER_NAME" --password '!' "$USER_NAME"
+fi
+
+sudo install -m 0755 -o root -g root "$here/traged-ci-deploy" "$WRAPPER"
+sudo install -m 0644 -o root -g root "$here/traged-deploy.service" \
+  /etc/systemd/system/traged-deploy.service
+sudo systemctl daemon-reload
+
+# Exactly one command, no wildcard, no caller-supplied argument. Written via a
+# temp file and visudo -c so a malformed entry can never land and lock sudo up.
+tmp_sudoers="$(mktemp)"
+trap 'rm -f "$tmp_sudoers"' EXIT
+printf '%s ALL=(root) NOPASSWD: /usr/bin/systemctl start --wait traged-deploy.service\n' \
+  "$USER_NAME" > "$tmp_sudoers"
+sudo visudo -cf "$tmp_sudoers" >/dev/null
+sudo install -m 0440 -o root -g root "$tmp_sudoers" /etc/sudoers.d/traged-deploy
+
+# `restrict` disables pty/agent/port/X11 forwarding and user-rc; the forced
+# command confines the key to the wrapper. Rewritten wholesale, so removing a key
+# from traged-ci.pub revokes it on the next deploy.
+sudo install -d -m 0700 -o "$USER_NAME" -g "$USER_NAME" "/home/$USER_NAME/.ssh"
+sudo tee "/home/$USER_NAME/.ssh/authorized_keys" >/dev/null <<EOF
+command="$WRAPPER",restrict $(cat "$PUBKEY_FILE")
+EOF
+sudo chown "$USER_NAME:$USER_NAME" "/home/$USER_NAME/.ssh/authorized_keys"
+sudo chmod 0600 "/home/$USER_NAME/.ssh/authorized_keys"
+
+echo "TrageD CI deploy account ready"

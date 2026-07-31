@@ -252,5 +252,46 @@ services:
     restart: unless-stopped
 
 
+  # TrageD (ws.traged.commo.nz) — the game server for traged.commo.nz, whose
+  # static client is served from sabre. It lives here because a 30Hz
+  # authoritative world wants room: this host has twelve cores and 31GiB against
+  # sabre's one and 956MiB, and being in Auckland it is also the nearest host to
+  # the players.
+  #
+  # PUBLIC, deliberately and unlike everything else here — no tailscale-only
+  # middleware. That means a public game route on the residential line: anyone
+  # flooding it takes out the house, not just the game. Chosen knowingly.
+  #
+  # Image built and pushed by dominics/td's deploy workflow; rolled by the
+  # traged-deploy account deploy-dagger installs.
+  td-server:
+    image: ghcr.io/dominics/td-server:latest
+    # No published ports: Traefik reaches it over the compose network, so the
+    # game port is not independently addressable even on the LAN.
+    environment:
+      TD_LISTEN: "0.0.0.0:5001"
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.traged.rule: "Host(`ws.traged.commo.nz`)"
+      traefik.http.routers.traged.entrypoints: "websecure"
+      traefik.http.routers.traged.tls: "true"
+      # HTTP-01 like statio.nz, not the DNS-01 resolver: this name resolves to a
+      # public address, and the DNS-01 creds here are scoped to varspool.com.
+      traefik.http.routers.traged.tls.certresolver: "letsencrypt"
+      traefik.http.services.traged.loadbalancer.server.port: "5001"
+    # Roomy next to the other options, but this box also runs Plex transcodes.
+    # Capped so a runaway world is killed by itself rather than competing with
+    # the thing the house actually notices.
+    mem_limit: 4g
+    memswap_limit: 4g
+    cpus: 4
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    restart: unless-stopped
+
+
 volumes:
   traefik-acme:

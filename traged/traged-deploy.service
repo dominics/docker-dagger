@@ -1,0 +1,24 @@
+# The one privileged action CI is allowed to cause on this host.
+#
+# It exists as a unit, rather than as a docker command in the CI wrapper, so the
+# deploy account never needs the docker group — which on a box holding the
+# household's media is a privilege worth not handing to a CI secret. sudoers
+# grants exactly `systemctl start --wait traged-deploy.service`, so there is no
+# argument for a leaked key to bend.
+#
+# Only the td-server service is touched: a deploy of the game must never restart
+# Plex, Sonarr, or anything else the house is using.
+#
+# Installed by traged/install-deploy-account (run from deploy-dagger).
+[Unit]
+Description=Pull the current TrageD server image and restart it
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/media
+Environment=CONFIG_DIR=/etc/media-server
+Environment=STORAGE_DIR=/media/storage
+ExecStart=/usr/bin/docker compose pull td-server
+ExecStart=/usr/bin/docker compose up -d --no-deps td-server

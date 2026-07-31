@@ -17,6 +17,9 @@ sudo -EH git pull
 echo "Updating configuration"
 sudo rsync -a config/home-assistant/ /etc/media-server/home-assistant
 
+echo "Installing the TrageD CI deploy account"
+./traged/install-deploy-account
+
 echo "Pulling new versions of containers"
 docker compose pull
 
