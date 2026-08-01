@@ -44,7 +44,10 @@ sudo systemctl daemon-reload
 # The private image needs a pull credential. Not installed here — it is a secret
 # and this file is in git. Say so plainly rather than letting the next deploy
 # fail with a bare 401.
-if [ ! -s /etc/traged/docker/config.json ]; then
+# `sudo test`, not a bare test: the config dir is 0700 root, so an unprivileged
+# stat cannot see the file and would report it missing every single run — and a
+# warning that always fires is one nobody reads when it finally means something.
+if ! sudo test -s /etc/traged/docker/config.json; then
   echo
   echo "NOTE: no registry credential yet at /etc/traged/docker/config.json." >&2
   echo "      The TrageD image is private, so deploys will fail until you run:" >&2
