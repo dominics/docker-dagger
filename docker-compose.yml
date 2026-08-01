@@ -279,6 +279,16 @@ services:
       # public address, and the DNS-01 creds here are scoped to varspool.com.
       traefik.http.routers.traged.tls.certresolver: "letsencrypt"
       traefik.http.services.traged.loadbalancer.server.port: "5001"
+    # The world lives in memory and nothing is persisted, so a wedged process
+    # loses nothing worth keeping — replace it. `up -d --wait` blocks on this,
+    # which is what stops a deploy returning while Traefik still has no backend
+    # to route to.
+    healthcheck:
+      test: ["CMD-SHELL", "timeout 2 bash -c '</dev/tcp/127.0.0.1/5001' || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
     # Roomy next to the other options, but this box also runs Plex transcodes.
     # Capped so a runaway world is killed by itself rather than competing with
     # the thing the house actually notices.

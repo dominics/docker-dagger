@@ -52,4 +52,11 @@ fi
 
 # --no-deps so a game deploy never restarts Plex or anything else the house is
 # using; only the one service is replaced.
-exec docker compose up -d --no-deps td-server
+#
+# --wait blocks until the container reports healthy rather than returning the
+# moment it is started. Without it the deploy claims success while the container
+# is still booting, and anything checking immediately afterwards sees a 404:
+# Traefik's docker provider drops the router entirely while the container is
+# away, so the hostname matches nothing at all rather than matching a backend
+# that is down.
+exec docker compose up -d --no-deps --wait --wait-timeout 90 td-server
