@@ -270,6 +270,12 @@ services:
     # game port is not independently addressable even on the LAN.
     environment:
       TD_LISTEN: "0.0.0.0:5001"
+      # Where the world is kept across a restart. Without this the server keeps
+      # nothing, which is what a checkout gets and what this host got until the
+      # deploy started costing everybody their maze.
+      TD_SAVE: "/var/lib/td/world.save"
+    volumes:
+      - td-world:/var/lib/td
     labels:
       traefik.enable: "true"
       traefik.http.routers.traged.rule: "Host(`ws.traged.commo.nz`)"
@@ -279,10 +285,11 @@ services:
       # public address, and the DNS-01 creds here are scoped to varspool.com.
       traefik.http.routers.traged.tls.certresolver: "letsencrypt"
       traefik.http.services.traged.loadbalancer.server.port: "5001"
-    # The world lives in memory and nothing is persisted, so a wedged process
-    # loses nothing worth keeping — replace it. `up -d --wait` blocks on this,
-    # which is what stops a deploy returning while Traefik still has no backend
-    # to route to.
+    # A wedged process is replaced. It saves every thirty seconds and again on
+    # the SIGTERM that stopping it sends, so a restart costs at most the last
+    # half-minute and usually nothing. `up -d --wait` blocks on this, which is
+    # what stops a deploy returning while Traefik still has no backend to route
+    # to.
     healthcheck:
       test: ["CMD-SHELL", "timeout 2 bash -c '</dev/tcp/127.0.0.1/5001' || exit 1"]
       interval: 30s
@@ -305,3 +312,7 @@ services:
 
 volumes:
   traefik-acme:
+  # The TrageD world. Named rather than a bind mount because nothing outside the
+  # container ever reads it, and a stray deploy-time chown is how bind mounts go
+  # wrong.
+  td-world:
