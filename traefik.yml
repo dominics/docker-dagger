@@ -18,9 +18,16 @@ api:
   insecure: true
 
 entryPoints:
+  # aliasHeadersStrategy (Traefik v3.7.12+): Go canonicalises header names on dashes only, so
+  # X-Auth-User, X_Auth_User and X.Auth.User are three distinct headers here, while CGI/WSGI/PHP
+  # and nginx-style backends collapse all three to one HTTP_X_AUTH_USER variable. A client can
+  # use that gap to smuggle a spoofed variant past a middleware that only manages the dash form.
+  # `delete` strips any header whose name holds a character that is not a letter, digit or dash
+  # before routing. Traefik also warns at startup for every entry point that leaves this unset.
   web:
     address: ":80"
     http:
+      aliasHeadersStrategy: delete
       redirections:
         entryPoint:
           to: websecure
@@ -28,11 +35,22 @@ entryPoints:
   websecure:
     address: ":443"
     http:
+      aliasHeadersStrategy: delete
       tls: {}
     forwardedHeaders:
       trustedIPs:
         - "192.168.1.0/24"
         - "114.23.221.217/32"
+  # Declared explicitly only so aliasHeadersStrategy can be set on it. `api.insecure`
+  # creates an entry point named `traefik` on :8080 implicitly, and Traefik warns about
+  # every entry point that leaves the strategy unset - including that one.
+  # Listens on all interfaces *inside* the container; the loopback-only restriction is
+  # the "127.0.0.1:8080:8080" port mapping in docker-compose.yml. Binding container
+  # loopback here would make that mapping unreachable.
+  traefik:
+    address: ":8080"
+    http:
+      aliasHeadersStrategy: delete
 
 providers:
   docker:

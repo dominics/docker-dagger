@@ -23,7 +23,7 @@ x-aiostreams-env: &aiostreams-env
 
 services:
   traefik:
-    image: traefik:v3.6
+    image: traefik:v3.7.12@sha256:ef751c695afd26e2be41009047f651153dc1e61ace03e6d13f299d8c4be842b8
     ports:
       - "80:80"
       - "443:443"
@@ -34,6 +34,13 @@ services:
       - ./traefik.yml:/etc/traefik/traefik.yml:ro
       - ./dynamic.yml:/etc/traefik/dynamic.yml:ro
       - traefik-acme:/etc/traefik/acme
+      # The geoblock plugin is Go source fetched from plugins.traefik.io and compiled by
+      # Yaegi at boot, not part of the image. Without this volume every restart re-downloads
+      # it, and deploy-dagger restarts on every deploy: if that fetch fails, plugins are
+      # disabled, geoblock-nz@file becomes an unknown middleware, and both statio.nz routers
+      # fail to build. Observed once already. Persisting it makes the deploy independent of
+      # a third-party download.
+      - traefik-plugins:/plugins-storage
     environment:
       # Route53 DNS-01 challenge creds for the letsencrypt-dns resolver (lego route53
       # provider). Least-priv IAM user traefik-acme-route53 (terraform/varspool/iam.tf).
@@ -312,6 +319,8 @@ services:
 
 volumes:
   traefik-acme:
+  # Downloaded+compiled Traefik plugins (geoblock). See the traefik service comment.
+  traefik-plugins:
   # The TrageD world. Named rather than a bind mount because nothing outside the
   # container ever reads it, and a stray deploy-time chown is how bind mounts go
   # wrong.
