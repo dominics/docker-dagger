@@ -1,3 +1,16 @@
+# Images are pinned as `tag@sha256:...`. The tag says what it is for a reader; the digest
+# is what Docker actually enforces, and it is the only immutable half - a tag can be re-pushed
+# to different bytes by anyone who takes over the publisher's account. `docker compose pull`
+# therefore fetches exactly these bytes and cannot move a service underneath us.
+#
+# To take updates, resolve the new digests deliberately rather than by pulling a floating tag:
+#
+#   docker pull <image>:latest
+#   docker image inspect <image>:latest \
+#     --format '{{index .RepoDigests 0}} {{index .Config.Labels "org.opencontainers.image.version"}}'
+#
+# then paste tag and digest back in here. td-server is the deliberate exception - see its comment.
+
 # Shared environment for both AIOStreams instances (LAN + tailnet). Anchored so the two
 # services stay in lock-step on wiring; only BASE_URL / DB path / published port differ.
 x-aiostreams-env: &aiostreams-env
@@ -51,7 +64,7 @@ services:
     restart: unless-stopped
 
   sonarr:
-    image: linuxserver/sonarr
+    image: linuxserver/sonarr:4.0.19.2979-ls322@sha256:c19aa4ecdf03d73e1d5c901da33744cb7eb4d921f89bafed1ca264601d7fa224
     ports:
       - "127.0.0.1:8989:8989"
     volumes:
@@ -65,7 +78,7 @@ services:
     restart: unless-stopped
 
   radarr:
-    image: linuxserver/radarr
+    image: linuxserver/radarr:6.3.0.10514-ls314@sha256:119aaa4a4f7349bcd2a136c5373a0d7925b5479915c7dfe0c0ad352db2a6d438
     ports:
       - "127.0.0.1:7878:7878"
     volumes:
@@ -79,7 +92,7 @@ services:
     restart: unless-stopped
 
   lidarr:
-    image: lscr.io/linuxserver/lidarr
+    image: lscr.io/linuxserver/lidarr:3.1.0.4875-ls40@sha256:c74c32408fdf6e7926ad62641fc1a5544206ee65c33f2188bb179edb30e28f5a
     ports:
       - "127.0.0.1:8686:8686"
     volumes:
@@ -93,7 +106,7 @@ services:
     restart: unless-stopped
 
   prowlarr:
-    image: lscr.io/linuxserver/prowlarr:latest
+    image: lscr.io/linuxserver/prowlarr:2.5.2.5491-ls157@sha256:ab91301778251f82a31bbfc87f0497376d59e84439d9a1ceff6a61d594d1e3d7
     ports:
       - "127.0.0.1:9696:9696"
     volumes:
@@ -132,7 +145,8 @@ services:
   # usenet WebDAV is only reachable from dagger itself or the tailnet. nzbdav's built-in
   # username/password is the auth for the loopback/tailnet side.
   nzbdav:
-    image: ghcr.io/nzbdav-dev/nzbdav:latest
+    # No version tag published upstream; digest resolved from :latest on 2026-08-28.
+    image: ghcr.io/nzbdav-dev/nzbdav@sha256:fc44a9d33adceddc4397eb660b4fcaf1917e23323fb80dea0645f56db129562f
     ports:
       - "127.0.0.1:3000:3000"
     volumes:
@@ -155,7 +169,7 @@ services:
   # built-in proxy, keeping WebDAV creds out of the URLs handed to clients and ensuring
   # usenet bytes egress only from dagger — independent of the per-config nzbdav.aiostreamsAuth.
   aiostreams-lan:
-    image: ghcr.io/viren070/aiostreams:latest
+    image: ghcr.io/viren070/aiostreams@sha256:b169ccfb2b6f351f1bc5a8a460e4e102db77a11fb4fc58222e411d96b3adb85b
     # No host port publish: Traefik is the sole ingress, reaching this over the compose
     # network at http://aiostreams-lan:3000. Dropping the LAN bind also removes the
     # plain-HTTP exposure — clients must use the trusted-HTTPS Traefik endpoint, which
@@ -175,7 +189,7 @@ services:
   # Tailnet instance for the roaming phone. Loopback-only bind; Tailscale Serve
   # (svc:aiostreams) terminates HTTPS and proxies to 127.0.0.1:8084.
   aiostreams-ts:
-    image: ghcr.io/viren070/aiostreams:latest
+    image: ghcr.io/viren070/aiostreams@sha256:b169ccfb2b6f351f1bc5a8a460e4e102db77a11fb4fc58222e411d96b3adb85b
     ports:
       - "127.0.0.1:8084:3000"
     environment:
@@ -194,7 +208,7 @@ services:
   # nginx forwards reddit's bytes verbatim (no URL rewriting), so the feed never references
   # this proxy host. See redlib-proxy/nginx.conf for the load-bearing browser User-Agent.
   redlib:
-    image: nginx:alpine
+    image: nginx:alpine@sha256:db35bfc6b2951e7f8a72db5db120288c127ffaeeb4a6d4b95a26fead017d5913  # 1.31.4
     ports:
       - "127.0.0.1:8090:8080"
     volumes:
@@ -202,7 +216,7 @@ services:
     restart: unless-stopped
 
   sabnzbd:
-    image: lscr.io/linuxserver/sabnzbd
+    image: lscr.io/linuxserver/sabnzbd:5.1.2-ls270@sha256:13d4404f1242f819e0cc2e294def5858def251a3609eb59404dad303075a564a
     ports:
       - "127.0.0.1:8081:8081"
     volumes:
@@ -242,7 +256,7 @@ services:
  # without Tailscale. svc:plex (configured in tailscale/serve.json) provides HTTPS to
  # tailnet clients on top of that.
   plex:
-    image: linuxserver/plex
+    image: linuxserver/plex:1.43.3.10896-cb3ebc72d-ls321@sha256:f6c58cb2f5e41cd1397bf2ed4e61ef63bd86e0736841b3ef426fabfe04606293
     runtime: nvidia
     network_mode: "host"
     volumes:
@@ -271,6 +285,11 @@ services:
   #
   # Image built and pushed by dominics/td's deploy workflow; rolled by the
   # traged-deploy account deploy-dagger installs.
+  #
+  # Deliberately NOT digest-pinned, unlike everything else here. The floating tag
+  # is the mechanism by which CI ships a new build: pinning it would make every
+  # future push a no-op and quietly break the deploy. The supply-chain argument
+  # for pinning is about third-party publishers; this image is our own CI.
   td-server:
     image: ghcr.io/dominics/td-server:latest
     # No published ports: Traefik reaches it over the compose network, so the
