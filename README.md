@@ -27,6 +27,7 @@ URLs (tailnet-only):
 | Lidarr  | `https://lidarr.<tailnet>.ts.net`  |
 | SABnzbd | `https://sabnzbd.<tailnet>.ts.net` |
 | Plex    | `https://plex.<tailnet>.ts.net` (LAN clients keep using `http://192.168.1.200:32400`) |
+| Jellyfin | `https://jellyfin.<tailnet>.ts.net` (LAN clients keep using `http://192.168.1.200:8096`) |
 | Traefik | `https://traefik.<tailnet>.ts.net` |
 
 One-time tailnet policy edits (admin console):

@@ -4,13 +4,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Docker Compose stack for a home media server running on a host called "dagger" (`media.varspool.com`). Services include Sonarr, Radarr, Lidarr, Prowlarr, SABnzbd, nzbdav (usenet-as-WebDAV for streaming), AIOStreams (self-hosted Stremio aggregator over nzbdav + Prowlarr, LAN + tailnet instances), Plex (with NVIDIA GPU transcoding), and Traefik as a reverse proxy.
+Docker Compose stack for a home media server running on a host called "dagger" (`media.varspool.com`). Services include Sonarr, Radarr, Lidarr, Prowlarr, SABnzbd, nzbdav (usenet-as-WebDAV for streaming), AIOStreams (self-hosted Stremio aggregator over nzbdav + Prowlarr, LAN + tailnet instances), Plex and Jellyfin (both with NVIDIA GPU transcoding, sharing one library), and Traefik as a reverse proxy.
 
 ## Architecture
 
 - **Tailscale Services** provide HTTPS for the media web UIs. The host's existing
   `tailscaled` advertises `svc:sonarr`, `svc:radarr`, `svc:lidarr`, `svc:prowlarr`, `svc:sabnzbd`,
-  `svc:nzbdav`, `svc:aiostreams`, `svc:plex`, `svc:traefik` per `tailscale/apply-serve`.
+  `svc:nzbdav`, `svc:aiostreams`, `svc:plex`, `svc:jellyfin`, `svc:traefik` per
+  `tailscale/apply-serve`.
   Each gets an auto-issued Let's Encrypt cert on `<svc>.<tailnet>.ts.net`. Containers bind
   to `127.0.0.1:PORT`; Tailscale Serve terminates TLS on the tailnet side.
 - **AIOStreams (two instances)**: AIOStreams bakes a single `BASE_URL` into every stream
@@ -25,6 +26,15 @@ Docker Compose stack for a home media server running on a host called "dagger" (
 - **Plex** runs in `host` network mode with `nvidia` runtime, so it's reachable on the LAN
   at `192.168.1.200:32400` *without* Tailscale (TVs, Sonos, guest phones). `svc:plex` is
   additive on top for tailnet HTTPS.
+- **Jellyfin** (`192.168.1.200:8096`) runs the same way and over the same library, for the
+  same reason: the LG TV's webOS client has no tailnet. Host mode additionally lets
+  Jellyfin's 7359/udp discovery broadcast reach clients, so the TV app finds the server
+  without being handed an IP. Its `/transcode` is `$STORAGE_DIR/transcode/jellyfin`, kept
+  apart from Plex's. GPU is the same 1080 Ti: Pascal has NVENC/NVDEC for H.264 and HEVC
+  (including 10-bit decode) but **no AV1 in either direction**, so AV1 must stay unticked
+  in Jellyfin's hardware acceleration settings or those files fall back to CPU transcode.
+  Deleting media from the Jellyfin UI needs both the read/write library mounts (as
+  configured) and the per-user "Allow media deletion from" toggle, which is off by default.
 - **Traefik v3.6** carries the public `statio.nz` route (Let's Encrypt via ACME HTTP-01,
   resolver `letsencrypt`) and one internal route, `aiostreams.media.varspool.com`
   (Let's Encrypt via DNS-01/Route53, resolver `letsencrypt-dns` — the name resolves to a
@@ -106,5 +116,6 @@ All required in `.env` (see `.env.example`):
   (`aiostreams.media.varspool.com`) that needs a publicly-trusted cert without a tailnet client
 - Containers bind to `127.0.0.1` (not the tailnet IP) — Tailscale Serve proxies from the
   tailnet to loopback
-- Plex is the exception: `network_mode: host` so LAN clients without Tailscale keep working
+- Plex and Jellyfin are the exceptions: `network_mode: host` so LAN clients without
+  Tailscale keep working
 - Commented-out services (nzbget, home-assistant) are kept for reference

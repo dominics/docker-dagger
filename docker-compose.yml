@@ -272,6 +272,32 @@ services:
       NVIDIA_VISIBLE_DEVICES: all
     restart: unless-stopped
 
+  # Jellyfin serves the same library as Plex, on the same host. Host network mode
+  # for the same reason Plex uses it (the LG TV has no tailnet client and needs the
+  # LAN address) and additionally so the 7359/udp discovery broadcast reaches
+  # clients, which is how the webOS app finds the server without being told an IP.
+  # svc:jellyfin provides tailnet HTTPS on top, as svc:plex does for Plex.
+  #
+  # Its own transcode directory rather than Plex's, so two servers scratching at
+  # once cannot collide.
+  jellyfin:
+    image: lscr.io/linuxserver/jellyfin:10.11.11ubu2604-ls46@sha256:4f6d8dfc53ec5a1ddf7a90e4338972d57d7b0adff6dc88b53184f8285d0b594f
+    runtime: nvidia
+    network_mode: "host"
+    volumes:
+      - ${CONFIG_DIR}/jellyfin:/config
+      - ${STORAGE_DIR}/movies:/data/movies
+      - ${STORAGE_DIR}/tv:/data/tv
+      - ${STORAGE_DIR}/transcode/jellyfin:/transcode
+      - /dev/dri:/dev/dri
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ: ${TZ}
+      NVIDIA_VISIBLE_DEVICES: all
+      JELLYFIN_PublishedServerUrl: ${LOCAL_IP}
+    restart: unless-stopped
+
 
   # TrageD (ws.traged.commo.nz) — the game server for traged.commo.nz, whose
   # static client is served from sabre. It lives here because a 30Hz
