@@ -66,6 +66,9 @@ Docker Compose stack for a home media server running on a host called "dagger" (
 - `.env` / `.env.example` — Environment variables (`PUID`, `PGID`, `TZ`, `LOCAL_IP`)
 - `deploy-dagger` — Deployment script: pulls code, syncs config, pulls images, restarts containers
 - `config/home-assistant/` — Home Assistant configuration (currently disabled in compose)
+- `immich/` - a **separate** compose stack (`name: immich`), not part of the media
+  stack and not deployed by `deploy-dagger`. Runs from `/home/media/immich` as
+  `dominic`. See `immich/README.md` before changing it.
 
 ## Common Commands
 

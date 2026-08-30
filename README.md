@@ -10,6 +10,12 @@ Docker compose files, for
 - Set up docker-nvidia for Plex
 - Apply the [Tailscale Services](#tailscale-services) configuration (see below)
 
+## Immich
+
+`immich/` is a second, independent compose stack on the same host (the photo
+library). It has its own lifecycle and is **not** deployed by `deploy-dagger` -
+see `immich/README.md`.
+
 ## Tailscale Services
 
 Internal HTTPS for the media web UIs is provided by [Tailscale Services][tss]. The single
@@ -29,6 +35,7 @@ URLs (tailnet-only):
 | Plex    | `https://plex.<tailnet>.ts.net` (LAN clients keep using `http://192.168.1.200:32400`) |
 | Jellyfin | `https://jellyfin.<tailnet>.ts.net` (LAN clients keep using `http://192.168.1.200:8096`) |
 | Traefik | `https://traefik.<tailnet>.ts.net` |
+| Immich  | `https://immich.<tailnet>.ts.net` (separate stack, see `immich/`) |
 
 One-time tailnet policy edits (admin console):
 
