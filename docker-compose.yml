@@ -327,9 +327,8 @@ services:
   #
   # No S3: only Ryot's *export* is gated on file storage, its generic-JSON *import* is not.
   #
-  # Loopback-only with no tailnet service yet. svc:ryot needs its VIP service object and
-  # ACL declared in the tf-config repo first (see tailscale/apply-serve's prereqs), so
-  # until that lands it is reached with `ssh -N -L 8000:localhost:8000 dagger`.
+  # Reached over the tailnet at https://ryot.royal-shark.ts.net (svc:ryot, declared in
+  # tf-config). Loopback-bound like the rest; Tailscale Serve terminates TLS.
   ryot:
     image: ghcr.io/ignisda/ryot:v10.5.0@sha256:a752b6aee5378527b20e69076a3e9bd53dae6b550d2c2d67f7f71c7aadbc69cc
     ports:

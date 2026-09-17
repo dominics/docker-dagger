@@ -10,7 +10,7 @@ Docker Compose stack for a home media server running on a host called "dagger" (
 
 - **Tailscale Services** provide HTTPS for the media web UIs. The host's existing
   `tailscaled` advertises `svc:sonarr`, `svc:radarr`, `svc:lidarr`, `svc:prowlarr`, `svc:sabnzbd`,
-  `svc:nzbdav`, `svc:aiostreams`, `svc:plex`, `svc:jellyfin`, `svc:traefik` per
+  `svc:nzbdav`, `svc:aiostreams`, `svc:plex`, `svc:jellyfin`, `svc:ryot`, `svc:traefik` per
   `tailscale/apply-serve`.
   Each gets an auto-issued Let's Encrypt cert on `<svc>.<tailnet>.ts.net`. Containers bind
   to `127.0.0.1:PORT`; Tailscale Serve terminates TLS on the tailnet side.
@@ -52,9 +52,8 @@ Docker Compose stack for a home media server running on a host called "dagger" (
   a live library is blind to it; `~/workspace/watched-history` reads Plex's
   `metadata_item_views` table instead and emits Ryot's `CompleteExport` JSON for Import ->
   Generic JSON. Postgres-only, in a named `ryot-db` volume. No S3: only Ryot's *export* is
-  gated on file storage, the generic-JSON import is not. **Loopback-only for now** - there
-  is no `svc:ryot` yet, because that needs the VIP service object and ACL declared in
-  `tf-config` first, so reach it with `ssh -N -L 8000:localhost:8000 dagger`.
+  gated on file storage, the generic-JSON import is not. Reached over the tailnet via
+  `svc:ryot` (loopback 8000), like the other media UIs.
 - **Config persistence**: Service configs stored at `$CONFIG_DIR` (default `/etc/media-server`), media at `$STORAGE_DIR` (default `/media/storage`)
 
 ## Key Files
