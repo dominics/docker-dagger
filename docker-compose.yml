@@ -316,6 +316,62 @@ services:
   # is the mechanism by which CI ships a new build: pinning it would make every
   # future push a no-op and quietly break the deploy. The supply-chain argument
   # for pinning is about third-party publishers; this image is our own CI.
+  # Ryot - self-hosted media tracker, holding eight years of Plex watch history that
+  # nothing else can see. Roughly 79% of that history refers to media no longer on disk,
+  # so every importer that walks a live library (Plex's, Jellyfin's, Ryot's own) is blind
+  # to it; the ~/workspace/watched-history tool reads Plex's metadata_item_views table
+  # instead and emits Ryot's CompleteExport JSON, which goes in through Import ->
+  # Generic JSON. Chosen over Watcharr and Movary because it is the only one of the three
+  # that stores a date against an individual episode, and 1,483 of the 1,698 records are
+  # episodes.
+  #
+  # No S3: only Ryot's *export* is gated on file storage, its generic-JSON *import* is not.
+  #
+  # Loopback-only with no tailnet service yet. svc:ryot needs its VIP service object and
+  # ACL declared in the tf-config repo first (see tailscale/apply-serve's prereqs), so
+  # until that lands it is reached with `ssh -N -L 8000:localhost:8000 dagger`.
+  ryot:
+    image: ghcr.io/ignisda/ryot:v10.5.0@sha256:a752b6aee5378527b20e69076a3e9bd53dae6b550d2c2d67f7f71c7aadbc69cc
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment:
+      DATABASE_URL: "postgres://ryot:${RYOT_DB_PASSWORD:?Need to set RYOT_DB_PASSWORD (openssl rand -hex 32)}@ryot-db:5432/ryot"
+      # Ryot validates both of these as non-empty and refuses to boot without them.
+      SERVER_ADMIN_ACCESS_TOKEN: ${RYOT_ADMIN_ACCESS_TOKEN:?Need to set RYOT_ADMIN_ACCESS_TOKEN (openssl rand -hex 32)}
+      # The v4 API Read Access Token, not the v3 key - they are not interchangeable.
+      # 1Password: TMDB API (watched-history), the `credential` field.
+      MOVIES_AND_SHOWS_TMDB_ACCESS_TOKEN: ${TMDB_ACCESS_TOKEN:?Need to set TMDB_ACCESS_TOKEN (the TMDB v4 bearer)}
+      # Only used to build shareable item links. Points at the tailnet name that
+      # svc:ryot will carry; harmless that it does not resolve yet.
+      FRONTEND_URL: "https://ryot.royal-shark.ts.net"
+      TZ: ${TZ}
+    depends_on:
+      ryot-db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Ryot speaks Postgres only. Named volume rather than a bind mount for the same reason
+  # td-world is: nothing outside the container reads it, and a stray deploy-time chown is
+  # how bind mounts go wrong. Not published to the host - only ryot reaches it, over the
+  # compose network.
+  ryot-db:
+    image: postgres:17-alpine@sha256:18cfe3ef5e6815560c98237d6216d1e5119702fb0f3894c8785dd58b8bbe5d73
+    environment:
+      POSTGRES_DB: ryot
+      POSTGRES_USER: ryot
+      POSTGRES_PASSWORD: ${RYOT_DB_PASSWORD:?Need to set RYOT_DB_PASSWORD (openssl rand -hex 32)}
+    volumes:
+      - ryot-db:/var/lib/postgresql/data
+    healthcheck:
+      # Ryot runs its migrations on boot and crash-loops against a Postgres that is not
+      # accepting connections yet, so ryot waits on this rather than on the container
+      # merely existing.
+      test: ["CMD-SHELL", "pg_isready -U ryot -d ryot"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
   td-server:
     image: ghcr.io/dominics/td-server:latest
     # No published ports: Traefik reaches it over the compose network, so the
@@ -370,3 +426,5 @@ volumes:
   # container ever reads it, and a stray deploy-time chown is how bind mounts go
   # wrong.
   td-world:
+  # Ryot's Postgres data. Same reasoning as td-world.
+  ryot-db:

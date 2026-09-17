@@ -47,6 +47,14 @@ Docker Compose stack for a home media server running on a host called "dagger" (
   and the internal `aiostreams.media.varspool.com` route. The `tailscale-only` IP allowlist
   middleware (Tailscale CGNAT `100.64.0.0/10` + LAN `192.168.1.0/24`) gates the AIOStreams
   route and any future internal Traefik routes.
+- **Ryot** (`ryot`, `ryot-db`) is a media tracker holding eight years of Plex watch history.
+  About 79% of that history refers to media no longer on disk, so every importer that walks
+  a live library is blind to it; `~/workspace/watched-history` reads Plex's
+  `metadata_item_views` table instead and emits Ryot's `CompleteExport` JSON for Import ->
+  Generic JSON. Postgres-only, in a named `ryot-db` volume. No S3: only Ryot's *export* is
+  gated on file storage, the generic-JSON import is not. **Loopback-only for now** - there
+  is no `svc:ryot` yet, because that needs the VIP service object and ACL declared in
+  `tf-config` first, so reach it with `ssh -N -L 8000:localhost:8000 dagger`.
 - **Config persistence**: Service configs stored at `$CONFIG_DIR` (default `/etc/media-server`), media at `$STORAGE_DIR` (default `/media/storage`)
 
 ## Key Files
@@ -109,6 +117,9 @@ All required in `.env` (see `.env.example`):
   Route53 DNS-01 creds for Traefik's `letsencrypt-dns` resolver (internal HTTPS for
   `aiostreams.media.varspool.com`). Least-priv IAM user `traefik-acme-route53`
   (`terraform/varspool/iam.tf`). `.env` is `640 media:media` on dagger.
+- `RYOT_ADMIN_ACCESS_TOKEN` / `RYOT_DB_PASSWORD` / `TMDB_ACCESS_TOKEN` — Ryot. The first two
+  are in 1Password as `Ryot (dagger)`; the third is the TMDB **v4** bearer from
+  `TMDB API (watched-history)`, not the v3 key. Ryot refuses to boot without the admin token.
 - `CONFIG_DIR` / `STORAGE_DIR` — Set in `deploy-dagger` to `/etc/media-server` and `/media/storage`
 
 ## Conventions
