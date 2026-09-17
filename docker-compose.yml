@@ -347,6 +347,13 @@ services:
       # registerUser mutation accepts SERVER_ADMIN_ACCESS_TOKEN as an override, so a
       # further account can still be created deliberately.
       USERS_ALLOW_REGISTRATION: "false"
+      # The image bakes the author's analytics into its own ENV, so the frontend loads
+      # umami.diptesh.me/script.js on every page unless it is overridden here. The
+      # dashboard gates that script tag on all three of these, so any one would do; all
+      # three are set so a version that separates telemetry from umami stays silent too.
+      FRONTEND_UMAMI_SCRIPT_URL: ""
+      FRONTEND_UMAMI_WEBSITE_ID: ""
+      DISABLE_TELEMETRY: "true"
       TZ: ${TZ}
     depends_on:
       ryot-db:
