@@ -343,6 +343,10 @@ services:
       # Only used to build shareable item links. Points at the tailnet name that
       # svc:ryot will carry; harmless that it does not resolve yet.
       FRONTEND_URL: "https://ryot.royal-shark.ts.net"
+      # Single-user instance. Turning this off does not lock anyone out: Ryot's
+      # registerUser mutation accepts SERVER_ADMIN_ACCESS_TOKEN as an override, so a
+      # further account can still be created deliberately.
+      USERS_ALLOW_REGISTRATION: "false"
       TZ: ${TZ}
     depends_on:
       ryot-db:
