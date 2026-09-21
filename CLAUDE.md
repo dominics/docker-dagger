@@ -53,7 +53,12 @@ Docker Compose stack for a home media server running on a host called "dagger" (
   `metadata_item_views` table instead and emits Ryot's `CompleteExport` JSON for Import ->
   Generic JSON. Postgres-only, in a named `ryot-db` volume. No S3: only Ryot's *export* is
   gated on file storage, the generic-JSON import is not. Reached over the tailnet via
-  `svc:ryot` (loopback 8000), like the other media UIs.
+  `svc:ryot` (loopback 8000), like the other media UIs. New plays keep arriving through
+  `watched-history-poll.timer` on this host - a daily systemd job run from that same
+  repo's checkout in `~dominic/projects`, reading Jellyfin on `localhost:8096` and
+  writing Ryot on `127.0.0.1:8000`, so neither hop leaves the box. No built-in Ryot
+  integration can do this: Jellyfin numbers an episode from the filename Sonarr wrote,
+  which is in TVDB order, and the sink forwards that number and nothing else.
 - **Config persistence**: Service configs stored at `$CONFIG_DIR` (default `/etc/media-server`), media at `$STORAGE_DIR` (default `/media/storage`)
 
 ## Key Files
