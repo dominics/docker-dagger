@@ -1,7 +1,7 @@
 # Immich - self-hosted photo library (dagger).
 #
 # Adapted from the official release compose:
-#   https://github.com/immich-app/immich/releases/download/v3.1.0/docker-compose.yml
+#   https://github.com/immich-app/immich/releases/download/v3.3.5/docker-compose.yml
 # When bumping IMMICH_VERSION in .env, re-fetch the matching release compose and
 # re-apply the two local changes below, then read the release notes for breaking
 # DB migrations before `docker compose up`.
@@ -47,9 +47,9 @@ services:
 
   redis:
     container_name: immich_redis
-    image: docker.io/valkey/valkey:9@sha256:8e8d64b405ce18f41b8e5ee20aa4687a8ed0022d1298f2ce31cdcf3a76e09411
+    image: docker.io/valkey/valkey:9@sha256:c123e3715db63d06d4ad6964884037aa0d5d4d703939b9929954112889708e1d
     healthcheck:
-      test: redis-cli ping || exit 1
+      test: redis-cli ping | grep -q PONG || exit 1
     restart: always
 
   database:
