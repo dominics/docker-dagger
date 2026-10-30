@@ -435,6 +435,31 @@ services:
         max-file: "3"
     restart: unless-stopped
 
+  # Garage: an S3 store holding the Macs' shared sccache cache, so a build on
+  # one warms the other. Loopback-bound; svc:garage (tf-config) terminates TLS.
+  # The sccache bucket expires objects after 14 days by lifecycle rule, which is
+  # the only thing bounding its size. Bucket, key and layout live in the
+  # metadata, set up once by hand - see docs/garage.md.
+  garage:
+    image: dxflrs/garage:v2.5.0@sha256:677e5b758e4425a325b811c425c026bf35a4bf42f7ddbaa773de3f4fd779a5a5
+    ports:
+      - "127.0.0.1:3900:3900"
+    environment:
+      GARAGE_RPC_SECRET: ${GARAGE_RPC_SECRET:?Need to set GARAGE_RPC_SECRET (openssl rand -hex 32)}
+      GARAGE_ADMIN_TOKEN: ${GARAGE_ADMIN_TOKEN:?Need to set GARAGE_ADMIN_TOKEN (openssl rand -base64 32)}
+    volumes:
+      - ./config/garage/garage.toml:/etc/garage.toml:ro
+      - ${CONFIG_DIR}/garage/meta:/var/lib/garage/meta
+      - ${STORAGE_DIR}/garage:/var/lib/garage/data
+    mem_limit: 1g
+    memswap_limit: 1g
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    restart: unless-stopped
+
 
 volumes:
   traefik-acme:

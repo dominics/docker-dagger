@@ -46,6 +46,7 @@ declare -A SERVICES=(
   [redlib]=8090
   [ryot]=8000
   [immich]=2283
+  [garage]=3900
 )
 
 tailscale serve reset
