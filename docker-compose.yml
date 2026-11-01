@@ -395,7 +395,8 @@ services:
     # No published ports: Traefik reaches it over the compose network, so the
     # game port is not independently addressable even on the LAN.
     environment:
-      TD_LISTEN: "0.0.0.0:5001"
+      # IPv6 and IPv4 both: 0.0.0.0 would leave the port deaf over IPv6.
+      TD_LISTEN: "[::]:5001"
       # Where the world is kept across a restart. Without this the server keeps
       # nothing, which is what a checkout gets and what this host got until the
       # deploy started costing everybody their maze.
