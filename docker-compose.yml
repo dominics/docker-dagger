@@ -401,6 +401,8 @@ services:
       # nothing, which is what a checkout gets and what this host got until the
       # deploy started costing everybody their maze.
       TD_SAVE: "/var/lib/td/world.save"
+      # The last day of play, recorded beside the save for td-replays to serve.
+      TD_REPLAYS: "/var/lib/td/replays"
     volumes:
       - td-world:/var/lib/td
     labels:
@@ -429,6 +431,32 @@ services:
     mem_limit: 4g
     memswap_limit: 4g
     cpus: 4
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    restart: unless-stopped
+
+  # The recordings td-server writes, served as static files at
+  # ws.traged.commo.nz/replays/ for the client's replay mode. Mounts the world
+  # volume read-only, so nothing that answers the internet can touch the save.
+  # td-server speaks only WebSocket, which is why this is a container of its own.
+  td-replays:
+    image: nginx:alpine@sha256:db35bfc6b2951e7f8a72db5db120288c127ffaeeb4a6d4b95a26fead017d5913  # 1.31.4
+    volumes:
+      - td-world:/srv/td:ro
+      - ./traged/replays-nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    labels:
+      traefik.enable: "true"
+      # Longer than the td-server router's rule, so Traefik prefers it for
+      # these paths and the socket keeps everything else.
+      traefik.http.routers.traged-replays.rule: "Host(`ws.traged.commo.nz`) && PathPrefix(`/replays/`)"
+      traefik.http.routers.traged-replays.entrypoints: "websecure"
+      traefik.http.routers.traged-replays.tls: "true"
+      traefik.http.routers.traged-replays.tls.certresolver: "letsencrypt"
+      traefik.http.services.traged-replays.loadbalancer.server.port: "8080"
+    mem_limit: 128m
     logging:
       driver: json-file
       options:
