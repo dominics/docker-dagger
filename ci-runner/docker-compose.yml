@@ -1,0 +1,92 @@
+# Self-hosted GitHub Actions runners for dominics/td. See README.md here.
+#
+# A compose project of its own rather than services in the top-level stack:
+# `deploy-dagger` takes that stack down and up again, and a runner caught in
+# the middle of a job would fail it.
+#
+# Everything a runner keeps lives under /media/hd3/ci/<name>/: its registration
+# (`runner`), its checkouts and target directories (`work`), and root's home,
+# which is where rustup and cargo put the toolchain and installed tools
+# (`home`). The root disk is too small for target directories, so they sit on a
+# spinning disk, where a warm build still beats a cold hosted runner.
+#
+# The work directory is mounted at the same path inside as out, because the
+# deploy runner hands paths under it to the host's docker daemon.
+
+name: ci-runner
+
+x-runner: &runner
+  build: .
+  image: dagger/td-runner:local
+  restart: unless-stopped
+  # The game server and Plex share this host. A cgroup weight of 256 against
+  # the default 1024 means a build only gets the CPU they leave idle when they
+  # want it, and all of it otherwise.
+  cpu_shares: 256
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "3"
+
+x-runner-env: &runner-env
+  REPO_URL: https://github.com/dominics/td
+  RUNNER_SCOPE: repo
+  # Only needed the first time a runner starts, to register it. After that the
+  # registration is read back from CONFIGURED_ACTIONS_RUNNER_FILES_DIR. Mint
+  # one with `gh api -X POST repos/dominics/td/actions/runners/registration-token
+  # --jq .token`; it expires within the hour, so nothing long-lived is kept.
+  RUNNER_TOKEN: ${RUNNER_TOKEN:-}
+  CONFIGURED_ACTIONS_RUNNER_FILES_DIR: /runner-config
+  DISABLE_AUTOMATIC_DEREGISTRATION: "true"
+
+services:
+  # Two test runners, so the rust workflow's native and wasm jobs run side by
+  # side as they would on hosted runners. Neither can reach the docker socket:
+  # these run pull requests, including Renovate's, and with them any
+  # dependency's build script.
+  td-runner-1:
+    <<: *runner
+    hostname: dagger-td-1
+    mem_limit: 12g
+    environment:
+      <<: *runner-env
+      RUNNER_NAME: dagger-td-1
+      LABELS: td
+      RUNNER_WORKDIR: /media/hd3/ci/dagger-td-1/work
+    volumes:
+      - /media/hd3/ci/dagger-td-1/runner:/runner-config
+      - /media/hd3/ci/dagger-td-1/work:/media/hd3/ci/dagger-td-1/work
+      - /media/hd3/ci/dagger-td-1/home:/root
+
+  td-runner-2:
+    <<: *runner
+    hostname: dagger-td-2
+    mem_limit: 12g
+    environment:
+      <<: *runner-env
+      RUNNER_NAME: dagger-td-2
+      LABELS: td
+      RUNNER_WORKDIR: /media/hd3/ci/dagger-td-2/work
+    volumes:
+      - /media/hd3/ci/dagger-td-2/runner:/runner-config
+      - /media/hd3/ci/dagger-td-2/work:/media/hd3/ci/dagger-td-2/work
+      - /media/hd3/ci/dagger-td-2/home:/root
+
+  # The deploy runner builds and pushes the td-server image, so it holds the
+  # docker socket, which is root on this host. Only the deploy job targets its
+  # label, and that job only runs for commits already on main.
+  td-deploy:
+    <<: *runner
+    hostname: dagger-td-deploy
+    mem_limit: 8g
+    environment:
+      <<: *runner-env
+      RUNNER_NAME: dagger-td-deploy
+      LABELS: dagger-deploy
+      RUNNER_WORKDIR: /media/hd3/ci/dagger-td-deploy/work
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /media/hd3/ci/dagger-td-deploy/runner:/runner-config
+      - /media/hd3/ci/dagger-td-deploy/work:/media/hd3/ci/dagger-td-deploy/work
+      - /media/hd3/ci/dagger-td-deploy/home:/root

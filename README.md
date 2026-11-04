@@ -16,6 +16,12 @@ Docker compose files, for
 library). It has its own lifecycle and is **not** deployed by `deploy-dagger` -
 see `immich/README.md`.
 
+## CI runners
+
+`ci-runner/` is a third independent stack: GitHub Actions runners for TrageD's
+CI (`dominics/td`), so its builds run here instead of on hosted minutes. Also
+**not** deployed by `deploy-dagger` - see `ci-runner/README.md`.
+
 ## Tailscale Services
 
 Internal HTTPS for the media web UIs is provided by [Tailscale Services][tss]. The single

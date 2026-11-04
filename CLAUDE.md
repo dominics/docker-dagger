@@ -81,6 +81,9 @@ Docker Compose stack for a home media server running on a host called "dagger" (
 - `immich/` - a **separate** compose stack (`name: immich`), not part of the media
   stack and not deployed by `deploy-dagger`. Runs from `/home/media/immich` as
   `dominic`. See `immich/README.md` before changing it.
+- `ci-runner/` - another **separate** compose stack (`name: ci-runner`): self-hosted GitHub
+  Actions runners for `dominics/td`, not deployed by `deploy-dagger`. Runs from
+  `/home/media/ci-runner`. See `ci-runner/README.md` before changing it.
 
 ## Common Commands
 
