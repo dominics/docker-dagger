@@ -3,7 +3,7 @@
 # runner for dominics/td. Without it nothing starts WSL after a reboot.
 $ErrorActionPreference = 'Stop'
 $action = New-ScheduledTaskAction -Execute 'C:\Windows\System32\wsl.exe' `
-  -Argument '-d Ubuntu -u root -- systemctl is-system-running --wait'
+  -Argument '-d Ubuntu -u root -- systemctl start actions.runner.dominics-td.sword-td.service'
 $trigger = New-ScheduledTaskTrigger -AtStartup
 $principal = New-ScheduledTaskPrincipal -UserId 'Dominic' -LogonType S4U -RunLevel Highest
 $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries `
