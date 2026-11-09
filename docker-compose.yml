@@ -373,7 +373,7 @@ services:
   # how bind mounts go wrong. Not published to the host - only ryot reaches it, over the
   # compose network.
   ryot-db:
-    image: postgres:17-alpine@sha256:18cfe3ef5e6815560c98237d6216d1e5119702fb0f3894c8785dd58b8bbe5d73
+    image: postgres:17-alpine@sha256:3540c0362c809df084ffac0ae69fe794515f9de92692f02178bcdce0ef0302ac
     environment:
       POSTGRES_DB: ryot
       POSTGRES_USER: ryot
