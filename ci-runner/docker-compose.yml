@@ -1,4 +1,5 @@
-# Self-hosted GitHub Actions runners for dominics/td. See README.md here.
+# Self-hosted GitHub Actions runners for dominics/td and for the private
+# repositories whose pull request checks run here. See README.md here.
 #
 # A compose project of its own rather than services in the top-level stack:
 # `deploy-dagger` takes that stack down and up again, and a runner caught in
@@ -36,6 +37,8 @@ x-runner-env: &runner-env
   # registration is read back from CONFIGURED_ACTIONS_RUNNER_FILES_DIR. Mint
   # one with `gh api -X POST repos/dominics/td/actions/runners/registration-token
   # --jq .token`; it expires within the hour, so nothing long-lived is kept.
+  # A token registers runners for one repository only, so each service outside
+  # td overrides this with a variable of its own.
   RUNNER_TOKEN: ${RUNNER_TOKEN:-}
   CONFIGURED_ACTIONS_RUNNER_FILES_DIR: /runner-config
   DISABLE_AUTOMATIC_DEREGISTRATION: "true"
@@ -91,3 +94,91 @@ services:
       - /media/hd3/ci/dagger-td-deploy/runner:/runner-config
       - /media/hd3/ci/dagger-td-deploy/work:/media/hd3/ci/dagger-td-deploy/work
       - /media/hd3/ci/dagger-td-deploy/home:/root
+
+  # One runner for each private repository whose pull request checks run here,
+  # labelled with the repository's name (`runs-on: [self-hosted, linux, <repo>]`).
+  # A personal account has no account-wide runners, so each is registered to
+  # its own repository with its own token. They run Renovate's pull requests,
+  # so none can reach the docker socket. The jobs are small next to td's, and
+  # the memory limits are sized so that all of them running at once still fit
+  # beside the td runners.
+  anki-runner:
+    <<: *runner
+    hostname: dagger-anki
+    mem_limit: 4g
+    environment:
+      <<: *runner-env
+      REPO_URL: https://github.com/dominics/anki
+      RUNNER_TOKEN: ${RUNNER_TOKEN_ANKI:-}
+      RUNNER_NAME: dagger-anki
+      LABELS: anki
+      RUNNER_WORKDIR: /media/hd3/ci/dagger-anki/work
+    volumes:
+      - /media/hd3/ci/dagger-anki/runner:/runner-config
+      - /media/hd3/ci/dagger-anki/work:/media/hd3/ci/dagger-anki/work
+      - /media/hd3/ci/dagger-anki/home:/root
+
+  tf-config-runner:
+    <<: *runner
+    hostname: dagger-tf-config
+    mem_limit: 4g
+    environment:
+      <<: *runner-env
+      REPO_URL: https://github.com/dominics/tf-config
+      RUNNER_TOKEN: ${RUNNER_TOKEN_TF_CONFIG:-}
+      RUNNER_NAME: dagger-tf-config
+      LABELS: tf-config
+      RUNNER_WORKDIR: /media/hd3/ci/dagger-tf-config/work
+    volumes:
+      - /media/hd3/ci/dagger-tf-config/runner:/runner-config
+      - /media/hd3/ci/dagger-tf-config/work:/media/hd3/ci/dagger-tf-config/work
+      - /media/hd3/ci/dagger-tf-config/home:/root
+
+  home-runner:
+    <<: *runner
+    hostname: dagger-home
+    mem_limit: 4g
+    environment:
+      <<: *runner-env
+      REPO_URL: https://github.com/dominics/home
+      RUNNER_TOKEN: ${RUNNER_TOKEN_HOME:-}
+      RUNNER_NAME: dagger-home
+      LABELS: home
+      RUNNER_WORKDIR: /media/hd3/ci/dagger-home/work
+    volumes:
+      - /media/hd3/ci/dagger-home/runner:/runner-config
+      - /media/hd3/ci/dagger-home/work:/media/hd3/ci/dagger-home/work
+      - /media/hd3/ci/dagger-home/home:/root
+
+  screamour-runner:
+    <<: *runner
+    hostname: dagger-screamour
+    # Playwright's browsers run inside this one.
+    mem_limit: 6g
+    environment:
+      <<: *runner-env
+      REPO_URL: https://github.com/dominics/screamour
+      RUNNER_TOKEN: ${RUNNER_TOKEN_SCREAMOUR:-}
+      RUNNER_NAME: dagger-screamour
+      LABELS: screamour
+      RUNNER_WORKDIR: /media/hd3/ci/dagger-screamour/work
+    volumes:
+      - /media/hd3/ci/dagger-screamour/runner:/runner-config
+      - /media/hd3/ci/dagger-screamour/work:/media/hd3/ci/dagger-screamour/work
+      - /media/hd3/ci/dagger-screamour/home:/root
+
+  watched-history-runner:
+    <<: *runner
+    hostname: dagger-watched-history
+    mem_limit: 4g
+    environment:
+      <<: *runner-env
+      REPO_URL: https://github.com/dominics/watched-history
+      RUNNER_TOKEN: ${RUNNER_TOKEN_WATCHED_HISTORY:-}
+      RUNNER_NAME: dagger-watched-history
+      LABELS: watched-history
+      RUNNER_WORKDIR: /media/hd3/ci/dagger-watched-history/work
+    volumes:
+      - /media/hd3/ci/dagger-watched-history/runner:/runner-config
+      - /media/hd3/ci/dagger-watched-history/work:/media/hd3/ci/dagger-watched-history/work
+      - /media/hd3/ci/dagger-watched-history/home:/root
