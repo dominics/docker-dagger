@@ -1,0 +1,115 @@
+name: CI
+
+# What a change to this repository has to survive before it reaches dagger. Most changes
+# are Renovate moving an image tag or digest, so the jobs are about images: does the
+# reference exist, does the container boot, does Traefik still route, does a database
+# still open its data. Each job's script is in .github/ci/ and says what it checks.
+#
+# Hosted runners, not the ones in ci-runner/: this repository is public, and a
+# self-hosted runner would run a fork's pull request on dagger.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  compose:
+    name: compose
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Write placeholder .env files
+        run: .github/ci/dummy-env "$RUNNER_TEMP/scratch"
+      - name: docker compose config
+        run: |
+          # Each compose file in the repository, wherever it is.
+          status=0
+          while read -r file; do
+            if (cd "$(dirname "$file")" && docker compose config --quiet); then
+              echo "ok    $file"
+            else
+              echo "::error file=$file::docker compose config rejected $file"
+              status=1
+            fi
+          done < <(git ls-files 'docker-compose.yml' '*/docker-compose.yml')
+          exit "$status"
+
+  images:
+    name: images
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Write placeholder .env files
+        run: .github/ci/dummy-env "$RUNNER_TEMP/scratch"
+      - name: Resolve each image reference
+        run: .github/ci/images
+
+  build:
+    name: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Build each Dockerfile
+        run: |
+          status=0
+          while read -r file; do
+            echo "::group::docker build $file"
+            if ! docker build --file "$file" "$(dirname "$file")"; then
+              echo "::error file=$file::docker build failed for $file"
+              status=1
+            fi
+            echo "::endgroup::"
+          done < <(git ls-files 'Dockerfile' '*/Dockerfile')
+          exit "$status"
+
+  smoke:
+    name: smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Write placeholder .env files
+        run: .github/ci/dummy-env "$RUNNER_TEMP/scratch"
+      - name: Start the main stack and probe it
+        run: .github/ci/smoke "$RUNNER_TEMP/scratch"
+
+  smoke-immich:
+    name: smoke-immich
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Write placeholder .env files
+        run: .github/ci/dummy-env "$RUNNER_TEMP/scratch"
+      - name: Start Immich and probe it
+        run: .github/ci/smoke-immich
+
+  upgrade:
+    name: upgrade
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # The base commit's compose files are read out of history.
+          fetch-depth: 0
+      - name: Write placeholder .env files
+        run: .github/ci/dummy-env "$RUNNER_TEMP/scratch"
+      - name: ryot-db opens the data the base image wrote
+        run: .github/ci/upgrade "$BASE_SHA" . ryot-db ryot ryot
+      - name: Immich's database opens the data the base image wrote
+        if: ${{ !cancelled() }}
+        run: .github/ci/upgrade "$BASE_SHA" immich database postgres immich

@@ -1,0 +1,111 @@
+#!/usr/bin/env bash
+#
+# Starts the main stack on empty volumes with placeholder secrets, and checks that each
+# service came up and stayed up, that Traefik built the routers and middlewares its config
+# declares, and that requests are routed the way dynamic.yml and the container labels say.
+#
+# Needs the .env files from dummy-env. Usage: smoke SCRATCH_DIR
+
+set -euo pipefail
+
+# shellcheck source=.github/ci/lib
+source "$(dirname "${BASH_SOURCE[0]}")/lib"
+
+scratch=${1:?usage: smoke SCRATCH_DIR}
+cd "$repo_root"
+
+# Everything except td-server, whose image is private to dominics/td.
+services=(
+  traefik redlib td-replays garage
+  ryot-db ryot
+  sonarr radarr lidarr prowlarr sabnzbd nzbdav
+  aiostreams-lan aiostreams-ts
+  plex jellyfin
+)
+
+# Static config cannot be split across sources, so the CI variant is the real file with
+# one key added to each resolver.
+export CI_TRAEFIK_STATIC=$scratch/traefik.yml
+yq '.certificatesResolvers[].acme.caServer = "https://127.0.0.1:9/directory"' traefik.yml > "$CI_TRAEFIK_STATIC"
+
+export COMPOSE_FILE=docker-compose.yml:.github/ci/compose.smoke.yml
+
+trap 'status=$?; [[ $status -eq 0 ]] || dump_compose; exit $status' EXIT
+
+docker compose up -d --quiet-pull --wait --wait-timeout 600 "${services[@]}"
+
+failed=0
+check() { "$@" || failed=1; }
+
+group "Services answer"
+# The *arrs and Jellyfin have an unauthenticated health endpoint; the rest are held to
+# "an HTTP response that is not a server error".
+check probe sonarr        http://127.0.0.1:8989/ping        200
+check probe radarr        http://127.0.0.1:7878/ping        200
+check probe lidarr        http://127.0.0.1:8686/ping        200
+check probe prowlarr      http://127.0.0.1:9696/ping        200
+check probe jellyfin      http://127.0.0.1:8096/health      200
+check probe plex          http://127.0.0.1:32400/identity   200
+check probe nzbdav        http://127.0.0.1:3000/            '[234]..'
+check probe aiostreams-ts http://127.0.0.1:8084/            '[234]..'
+check probe redlib        http://127.0.0.1:8090/            '[2345]..'
+check probe garage        http://127.0.0.1:3900/            '[234]..'
+# Ryot only listens once its migrations have run against ryot-db.
+check probe ryot          http://127.0.0.1:8000/            '[234]..'
+endgroup
+
+group "Traefik built its configuration"
+check probe traefik-api http://127.0.0.1:8080/api/overview 200
+for kind in routers middlewares services; do
+  objects=$(curl -fsS "http://127.0.0.1:8080/api/http/$kind?per_page=1000")
+  jq -r '.[] | "\(.status)\t\(.name)"' <<<"$objects"
+  if jq -e '[.[] | select(.status != "enabled")] | length > 0' <<<"$objects" >/dev/null; then
+    error "traefik: $kind not enabled: $(jq -c '[.[] | select(.status != "enabled") | {name, error}]' <<<"$objects")"
+    failed=1
+  fi
+done
+# Names from dynamic.yml and the td-replays labels. A router that fails to parse is listed
+# with an error above; one that is silently dropped is caught here.
+for want in routers/cdn-station@file routers/cdn-station-www@file routers/aiostreams@file \
+            routers/traged-replays@docker middlewares/geoblock-nz@file \
+            middlewares/www-to-bare@file middlewares/tailscale-only@file; do
+  check probe "$want" "http://127.0.0.1:8080/api/http/$want" 200
+done
+endgroup
+
+group "Requests are routed"
+# The web entry point redirects to https.
+check probe web-redirect http://127.0.0.1/ '30[1278]' -H 'Host: statio.nz'
+
+# www.statio.nz passes the geoblock plugin (the runner is a private address, which
+# allowLocalRequests lets through) and is redirected to the bare name.
+location=$(curl -sk -o /dev/null -w '%{redirect_url}' --max-time 20 \
+  --resolve www.statio.nz:443:127.0.0.1 https://www.statio.nz/ci-probe || true)
+if [[ $location == https://statio.nz/ci-probe ]]; then
+  echo "ok    www-to-bare      -> $location"
+else
+  error "www.statio.nz/ci-probe redirected to '$location', wanted https://statio.nz/ci-probe"
+  failed=1
+fi
+
+# The AIOStreams route is gated to the tailnet and the LAN, and the runner is on neither.
+check probe tailscale-only https://aiostreams.media.varspool.com/ 403 \
+  --resolve aiostreams.media.varspool.com:443:127.0.0.1
+
+# /replays/ reaches the td-replays nginx through the docker provider. The world volume is
+# empty, so nginx answers 404, with the CORS header only it adds.
+headers=$(curl -sk -o /dev/null -D - --max-time 20 \
+  --resolve ws.traged.commo.nz:443:127.0.0.1 https://ws.traged.commo.nz/replays/index.tdindex || true)
+if grep -qi '^access-control-allow-origin: \*' <<<"$headers"; then
+  echo "ok    traged-replays   -> td-replays answered"
+else
+  error "ws.traged.commo.nz/replays/ did not reach td-replays: $(head -1 <<<"$headers")"
+  failed=1
+fi
+endgroup
+
+group "Containers stayed up"
+check assert_settled
+endgroup
+
+exit "$failed"

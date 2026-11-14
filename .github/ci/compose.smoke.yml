@@ -1,0 +1,16 @@
+# Layered over docker-compose.yml by the smoke script, on a hosted runner only.
+
+services:
+  traefik:
+    volumes:
+      # traefik.yml with the ACME directory pointed at nothing, so a CI run never asks
+      # Let's Encrypt for a certificate. Same mount target as the real file, so it replaces
+      # that entry rather than adding one.
+      - ${CI_TRAEFIK_STATIC:?Set by the smoke script}:/etc/traefik/traefik.yml:ro
+
+  # A hosted runner has no GPU and no nvidia runtime. Both servers start without one and
+  # fall back to software transcoding, which is enough to show the image boots.
+  plex:
+    runtime: runc
+  jellyfin:
+    runtime: runc

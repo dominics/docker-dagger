@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+#
+# Writes the .env files the compose projects need, from their .env.example, with placeholder
+# values and scratch directories in place of the host's paths. No real secret is involved:
+# a compose file that grows a required variable without .env.example learning about it fails
+# here, which is the point.
+#
+# Usage: dummy-env SCRATCH_DIR
+
+set -euo pipefail
+
+# shellcheck source=.github/ci/lib
+source "$(dirname "${BASH_SOURCE[0]}")/lib"
+
+scratch=${1:?usage: dummy-env SCRATCH_DIR}
+
+# A checkout on a real machine has a real .env, and this would replace it.
+if [[ ${CI:-} != true ]]; then
+  echo "dummy-env overwrites .env files; it only runs with CI=true" >&2
+  exit 1
+fi
+
+mkdir -p "$scratch"/{config,storage,immich-library,immich-pgdata}
+
+# deploy-dagger exports CONFIG_DIR and STORAGE_DIR rather than keeping them in .env, so
+# .env.example has neither. AIOStreams and Garage both reject a key that is not 64 hex
+# characters, and Garage exits without saying why.
+hex64=$(printf '0123456789abcdef%.0s' 1 2 3 4)
+{
+  sed -e "s/^AIOSTREAMS_SECRET_KEY=.*/AIOSTREAMS_SECRET_KEY=$hex64/" \
+      -e "s/^GARAGE_RPC_SECRET=.*/GARAGE_RPC_SECRET=$hex64/" \
+    "$repo_root/.env.example"
+  printf 'CONFIG_DIR=%s\n' "$scratch/config"
+  printf 'STORAGE_DIR=%s\n' "$scratch/storage"
+} > "$repo_root/.env"
+
+sed -e "s|^UPLOAD_LOCATION=.*|UPLOAD_LOCATION=$scratch/immich-library|" \
+    -e "s|^DB_DATA_LOCATION=.*|DB_DATA_LOCATION=$scratch/immich-pgdata|" \
+    -e "s|^DB_PASSWORD=.*|DB_PASSWORD=ciPlaceholderPassword|" \
+    "$repo_root/immich/.env.example" > "$repo_root/immich/.env"

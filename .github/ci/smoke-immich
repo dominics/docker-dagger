@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+#
+# Starts Immich's server with its Postgres and Valkey on empty volumes, and checks the API
+# answers, which it only does once the server has reached both and run its migrations.
+# The machine-learning container is left out: it is several gigabytes, and the server
+# starts without it.
+#
+# Needs the .env files from dummy-env.
+
+set -euo pipefail
+
+# shellcheck source=.github/ci/lib
+source "$(dirname "${BASH_SOURCE[0]}")/lib"
+
+cd "$repo_root/immich"
+
+trap 'status=$?; [[ $status -eq 0 ]] || dump_compose; exit $status' EXIT
+
+# The server exits if Postgres is not accepting connections yet and is restarted until it
+# is, which is harmless on dagger but reads as a failure to `--wait`. The compose file
+# follows upstream's and has no health condition on depends_on, so the order is made here.
+docker compose up -d --quiet-pull --wait --wait-timeout 300 redis database
+docker compose up -d --quiet-pull --wait --wait-timeout 600 immich-server
+
+probe immich-server http://127.0.0.1:2283/api/server/ping 200
+assert_settled
