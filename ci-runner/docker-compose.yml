@@ -79,7 +79,8 @@ services:
   td-deploy:
     <<: *runner
     hostname: dagger-td-deploy
-    mem_limit: 8g
+    # The td client's wasm link with fat LTO peaks near 8 GB.
+    mem_limit: 12g
     environment:
       <<: *runner-env
       RUNNER_NAME: dagger-td-deploy
