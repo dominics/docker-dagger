@@ -1,0 +1,85 @@
+#!/usr/bin/env bash
+#
+# Checks that each image the compose files name can actually be pulled: the pinned digest
+# exists in the registry and has a linux/amd64 build, and the tag beside it exists too. A
+# digest that was mistyped, garbage-collected upstream, or published without an amd64 build
+# fails here rather than at `docker compose pull` on dagger.
+#
+# A tag that has moved on from its pinned digest is reported but does not fail: that is the
+# normal state of a floating tag such as postgres:17-alpine between Renovate's digest PRs.
+#
+# Needs the .env files from dummy-env.
+
+set -euo pipefail
+
+# shellcheck source=.github/ci/lib
+source "$(dirname "${BASH_SOURCE[0]}")/lib"
+
+# Images this job cannot see. td-server is a private package pushed by dominics/td's own
+# deploy workflow, and this repository's token has no read access to it.
+skip=(ghcr.io/dominics/td-server)
+
+# manifest REF: the registry's descriptor for REF as JSON (digest, and for a multi-platform
+# image the list of per-platform manifests).
+manifest() {
+  docker buildx imagetools inspect "$1" --format '{{json .Manifest}}'
+}
+
+failed=0
+
+refs=$(for dir in "${compose_dirs[@]}"; do (cd "$dir" && docker compose config --images); done | sort -u)
+
+while read -r ref; do
+  repo=${ref%%@*}
+  digest=
+  [[ $ref == *@* ]] && digest=${ref#*@}
+  tag=
+  # A colon after the last slash is a tag; one before it is a registry port.
+  if [[ ${repo##*/} == *:* ]]; then
+    tag=${repo##*:}
+    repo=${repo%:*}
+  fi
+
+  if [[ " ${skip[*]} " == *" $repo "* ]]; then
+    notice "$ref: skipped, not readable from this repository"
+    continue
+  fi
+
+  if [[ -n $digest ]]; then
+    if ! pinned=$(manifest "$repo@$digest"); then
+      error "$ref: the pinned digest does not resolve"
+      failed=1
+      continue
+    fi
+    # A single-platform manifest carries no platform list; the registry gives no cheaper
+    # way to ask, and the publishers here all ship an index.
+    if jq -e 'has("manifests")' <<<"$pinned" >/dev/null &&
+       ! jq -e '[.manifests[] | select(.platform.os == "linux" and .platform.architecture == "amd64")] | length > 0' <<<"$pinned" >/dev/null; then
+      error "$ref: the pinned digest has no linux/amd64 build"
+      failed=1
+      continue
+    fi
+  fi
+
+  if [[ -n $tag ]]; then
+    if ! tagged=$(manifest "$repo:$tag"); then
+      error "$ref: the tag does not resolve"
+      failed=1
+      continue
+    fi
+    current=$(jq -r .digest <<<"$tagged")
+    if [[ -n $digest && $current != "$digest" ]]; then
+      warning "$repo:$tag now points at $current, not the pinned $digest"
+    fi
+  elif [[ -z $digest ]]; then
+    if ! manifest "$repo:latest" >/dev/null; then
+      error "$ref: does not resolve"
+      failed=1
+      continue
+    fi
+  fi
+
+  printf 'ok    %s\n' "$ref"
+done <<<"$refs"
+
+exit "$failed"

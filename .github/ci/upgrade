@@ -1,0 +1,74 @@
+#!/usr/bin/env bash
+#
+# Shows that a Postgres service still starts on the data it already has: initialises its
+# volume with the image the base commit names, writes a row, then starts the image this
+# commit names on that same volume and reads the row back.
+#
+# An empty volume says nothing about this. A new major version of Postgres initialises a
+# fresh data directory happily and refuses one written by the previous major, which is the
+# state the service is in on dagger.
+#
+# Needs the .env files from dummy-env.
+# Usage: upgrade BASE_SHA COMPOSE_DIR SERVICE DB_USER DB_NAME
+
+set -euo pipefail
+
+# shellcheck source=.github/ci/lib
+source "$(dirname "${BASH_SOURCE[0]}")/lib"
+
+base=${1:?usage: upgrade BASE_SHA COMPOSE_DIR SERVICE DB_USER DB_NAME}
+dir=${2:?}
+service=${3:?}
+db_user=${4:?}
+db_name=${5:?}
+
+# A push that creates or force-moves the branch has no usable "before".
+if ! git cat-file -e "$base^{commit}" 2>/dev/null; then
+  base=$(git rev-parse HEAD^)
+fi
+
+cd "$repo_root/$dir"
+prefix=$(git rev-parse --show-prefix)
+
+# The base commit's compose file, beside the current one so that both resolve to the same
+# project name and therefore the same volume.
+base_file=docker-compose.ci-base.yml
+if ! git show "$base:${prefix}docker-compose.yml" > "$base_file" 2>/dev/null; then
+  notice "$dir has no compose file at $base, nothing to upgrade from"
+  exit 0
+fi
+
+image_of() { docker compose "$@" config --format json | jq -r --arg s "$service" '.services[$s].image // empty'; }
+from=$(image_of -f "$base_file")
+to=$(image_of)
+if [[ -z $from ]]; then
+  notice "$service does not exist at $base, nothing to upgrade from"
+  exit 0
+fi
+echo "$service: $from"
+echo "$(printf '%*s' ${#service} '')-> $to"
+
+trap 'status=$?; [[ $status -eq 0 ]] || dump_compose; exit $status' EXIT
+
+sql() { docker compose "${@:2}" exec -T "$service" psql -v ON_ERROR_STOP=1 -U "$db_user" -d "$db_name" -tAc "$1"; }
+
+group "Initialise the volume with the base image"
+docker compose -f "$base_file" up -d --quiet-pull --wait --wait-timeout 180 "$service"
+sql "CREATE TABLE ci_upgrade (v text); INSERT INTO ci_upgrade VALUES ('survived');" -f "$base_file"
+docker compose -f "$base_file" stop "$service"
+docker compose -f "$base_file" rm -f "$service"
+endgroup
+
+group "Start this commit's image on that volume"
+if ! docker compose up -d --quiet-pull --wait --wait-timeout 180 "$service"; then
+  error "$service: $to does not start on a data directory written by $from"
+  exit 1
+fi
+got=$(sql "SELECT v FROM ci_upgrade;")
+if [[ $got != survived ]]; then
+  error "$service: the row written under $from read back as '$got' under $to"
+  exit 1
+fi
+assert_settled
+echo "ok    $service kept its data"
+endgroup

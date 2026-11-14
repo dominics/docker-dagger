@@ -1,0 +1,69 @@
+# Shared by the scripts beside it. Sourced, not run.
+
+repo_root=$(git rev-parse --show-toplevel)
+
+# The compose projects in this repository that have images Renovate updates: the main stack
+# at the root, and Immich with a project of its own.
+compose_dirs=("$repo_root" "$repo_root/immich")
+
+# GitHub Actions log annotations; plain lines anywhere else.
+notice()  { printf '::notice::%s\n' "$*"; }
+warning() { printf '::warning::%s\n' "$*"; }
+error()   { printf '::error::%s\n' "$*"; }
+
+group()    { printf '::group::%s\n' "$*"; }
+endgroup() { printf '::endgroup::\n'; }
+
+# What a failing step leaves behind for whoever reads the log: container states, then the
+# tail of each container's output. Run from the compose project's directory.
+dump_compose() {
+  group "docker compose ps"
+  docker compose ps -a || true
+  endgroup
+  group "docker compose logs (last 60 lines of each)"
+  docker compose logs --no-color --tail 60 || true
+  endgroup
+}
+
+# probe NAME URL CODES [curl args...]
+#
+# Polls URL until curl reports a status matching the extended regex CODES, for up to two
+# minutes. A status of 000 is curl failing to get an HTTP response at all.
+probe() {
+  local name=$1 url=$2 codes=$3 code=000
+  shift 3
+  for _ in $(seq 60); do
+    code=$(curl -sk -o /dev/null -w '%{http_code}' --max-time 10 "$@" "$url" || true)
+    if [[ $code =~ ^($codes)$ ]]; then
+      printf 'ok    %-16s %s -> %s\n' "$name" "$url" "$code"
+      return 0
+    fi
+    sleep 2
+  done
+  error "$name: $url answered $code, wanted $codes"
+  return 1
+}
+
+# assert_settled
+#
+# All containers of the compose project in the current directory are running, have never
+# been restarted, and are not unhealthy. `restart: unless-stopped` turns a crash at boot into
+# a loop that still reads as "running" at the moment it is looked at; the restart count is
+# what gives it away.
+assert_settled() {
+  local ids bad
+  ids=$(docker compose ps -aq)
+  if [[ -z $ids ]]; then
+    error "no containers in this compose project"
+    return 1
+  fi
+  # shellcheck disable=SC2086
+  bad=$(docker inspect $ids --format \
+    '{{.Name}} state={{.State.Status}} restarts={{.RestartCount}} health={{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' \
+    | grep -Ev 'state=running restarts=0 health=(healthy|none|starting)$' || true)
+  if [[ -n $bad ]]; then
+    error "containers that did not settle: $bad"
+    return 1
+  fi
+  echo "ok    all containers running, none restarted"
+}
