@@ -18,7 +18,7 @@ see `immich/README.md`.
 
 ## CI runners
 
-`ci-runner/` is a third independent stack: GitHub Actions runners for TrageD's
+`ci-runner/` is a third independent stack: GitHub Actions runners for TrageyD's
 CI (`dominics/td`), so its builds run here instead of on hosted minutes. Also
 **not** deployed by `deploy-dagger` - see `ci-runner/README.md`.
 

@@ -299,7 +299,7 @@ services:
     restart: unless-stopped
 
 
-  # TrageD (ws.traged.commo.nz) — the game server for traged.commo.nz, whose
+  # TrageyD (ws.trageyd.commo.nz) — the game server for trageyd.commo.nz, whose
   # static client is served from sabre. It lives here because a 30Hz
   # authoritative world wants room: this host has twelve cores and 31GiB against
   # sabre's one and 956MiB, and being in Auckland it is also the nearest host to
@@ -310,7 +310,7 @@ services:
   # flooding it takes out the house, not just the game. Chosen knowingly.
   #
   # Image built and pushed by dominics/td's deploy workflow; rolled by the
-  # traged-deploy account deploy-dagger installs.
+  # trageyd-deploy account deploy-dagger installs.
   #
   # Deliberately NOT digest-pinned, unlike everything else here. The floating tag
   # is the mechanism by which CI ships a new build: pinning it would make every
@@ -407,13 +407,15 @@ services:
       - td-world:/var/lib/td
     labels:
       traefik.enable: "true"
-      traefik.http.routers.traged.rule: "Host(`ws.traged.commo.nz`)"
-      traefik.http.routers.traged.entrypoints: "websecure"
-      traefik.http.routers.traged.tls: "true"
+      # ws.traged.commo.nz is the spelling traged.commo.nz redirects from. A
+      # WebSocket cannot follow a redirect, so this serves it rather than bouncing it.
+      traefik.http.routers.trageyd.rule: "Host(`ws.trageyd.commo.nz`) || Host(`ws.traged.commo.nz`)"
+      traefik.http.routers.trageyd.entrypoints: "websecure"
+      traefik.http.routers.trageyd.tls: "true"
       # HTTP-01 like statio.nz, not the DNS-01 resolver: this name resolves to a
       # public address, and the DNS-01 creds here are scoped to varspool.com.
-      traefik.http.routers.traged.tls.certresolver: "letsencrypt"
-      traefik.http.services.traged.loadbalancer.server.port: "5001"
+      traefik.http.routers.trageyd.tls.certresolver: "letsencrypt"
+      traefik.http.services.trageyd.loadbalancer.server.port: "5001"
     # A wedged process is replaced. It saves every thirty seconds and again on
     # the SIGTERM that stopping it sends, so a restart costs at most the last
     # half-minute and usually nothing. `up -d --wait` blocks on this, which is
@@ -439,23 +441,23 @@ services:
     restart: unless-stopped
 
   # The recordings td-server writes, served as static files at
-  # ws.traged.commo.nz/replays/ for the client's replay mode. Mounts the world
+  # ws.trageyd.commo.nz/replays/ for the client's replay mode. Mounts the world
   # volume read-only, so nothing that answers the internet can touch the save.
   # td-server speaks only WebSocket, which is why this is a container of its own.
   td-replays:
     image: nginx:alpine@sha256:db35bfc6b2951e7f8a72db5db120288c127ffaeeb4a6d4b95a26fead017d5913  # 1.31.4
     volumes:
       - td-world:/srv/td:ro
-      - ./traged/replays-nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./trageyd/replays-nginx.conf:/etc/nginx/conf.d/default.conf:ro
     labels:
       traefik.enable: "true"
       # Longer than the td-server router's rule, so Traefik prefers it for
       # these paths and the socket keeps everything else.
-      traefik.http.routers.traged-replays.rule: "Host(`ws.traged.commo.nz`) && PathPrefix(`/replays/`)"
-      traefik.http.routers.traged-replays.entrypoints: "websecure"
-      traefik.http.routers.traged-replays.tls: "true"
-      traefik.http.routers.traged-replays.tls.certresolver: "letsencrypt"
-      traefik.http.services.traged-replays.loadbalancer.server.port: "8080"
+      traefik.http.routers.trageyd-replays.rule: "(Host(`ws.trageyd.commo.nz`) || Host(`ws.traged.commo.nz`)) && PathPrefix(`/replays/`)"
+      traefik.http.routers.trageyd-replays.entrypoints: "websecure"
+      traefik.http.routers.trageyd-replays.tls: "true"
+      traefik.http.routers.trageyd-replays.tls.certresolver: "letsencrypt"
+      traefik.http.services.trageyd-replays.loadbalancer.server.port: "8080"
     mem_limit: 128m
     logging:
       driver: json-file
@@ -494,7 +496,7 @@ volumes:
   traefik-acme:
   # Downloaded+compiled Traefik plugins (geoblock). See the traefik service comment.
   traefik-plugins:
-  # The TrageD world. Named rather than a bind mount because nothing outside the
+  # The TrageyD world. Named rather than a bind mount because nothing outside the
   # container ever reads it, and a stray deploy-time chown is how bind mounts go
   # wrong.
   td-world:

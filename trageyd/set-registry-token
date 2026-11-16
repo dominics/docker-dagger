@@ -1,19 +1,19 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Installs the GHCR read token the TrageD deploy uses to pull its private image.
+# Installs the GHCR read token the TrageyD deploy uses to pull its private image.
 # Reads the token from stdin so it never appears in a shell history or a process
 # listing:
 #
-#   printf '%s' '<TOKEN>' | sudo ./traged/set-registry-token
+#   printf '%s' '<TOKEN>' | sudo ./trageyd/set-registry-token
 #
 # The credential goes in a directory of its own rather than /root/.docker, so it
 # is scoped to this one deploy and cannot be picked up accidentally by anything
-# else running as root. traged-deploy.service points DOCKER_CONFIG here.
+# else running as root. trageyd-deploy.service points DOCKER_CONFIG here.
 #
 # Managed by the docker-dagger repo; do not edit on the host.
 
-CONFIG_DIR=/etc/traged/docker
+CONFIG_DIR=/etc/trageyd/docker
 USER_NAME=dominics
 
 if [ "$(id -u)" -ne 0 ]; then
@@ -23,7 +23,7 @@ fi
 
 if [ -t 0 ]; then
   echo "set-registry-token: expects the token on stdin, not as an argument" >&2
-  echo "  printf '%s' '<TOKEN>' | sudo ./traged/set-registry-token" >&2
+  echo "  printf '%s' '<TOKEN>' | sudo ./trageyd/set-registry-token" >&2
   exit 1
 fi
 

@@ -67,7 +67,7 @@ done
 # Names from dynamic.yml and the td-replays labels. A router that fails to parse is listed
 # with an error above; one that is silently dropped is caught here.
 for want in routers/cdn-station@file routers/cdn-station-www@file routers/aiostreams@file \
-            routers/traged-replays@docker middlewares/geoblock-nz@file \
+            routers/trageyd-replays@docker middlewares/geoblock-nz@file \
             middlewares/www-to-bare@file middlewares/tailscale-only@file; do
   check probe "$want" "http://127.0.0.1:8080/api/http/$want" 200
 done
@@ -95,11 +95,11 @@ check probe tailscale-only https://aiostreams.media.varspool.com/ 403 \
 # /replays/ reaches the td-replays nginx through the docker provider. The world volume is
 # empty, so nginx answers 404, with the CORS header only it adds.
 headers=$(curl -sk -o /dev/null -D - --max-time 20 \
-  --resolve ws.traged.commo.nz:443:127.0.0.1 https://ws.traged.commo.nz/replays/index.tdindex || true)
+  --resolve ws.trageyd.commo.nz:443:127.0.0.1 https://ws.trageyd.commo.nz/replays/index.tdindex || true)
 if grep -qi '^access-control-allow-origin: \*' <<<"$headers"; then
-  echo "ok    traged-replays   -> td-replays answered"
+  echo "ok    trageyd-replays  -> td-replays answered"
 else
-  error "ws.traged.commo.nz/replays/ did not reach td-replays: $(head -1 <<<"$headers")"
+  error "ws.trageyd.commo.nz/replays/ did not reach td-replays: $(head -1 <<<"$headers")"
   failed=1
 fi
 endgroup

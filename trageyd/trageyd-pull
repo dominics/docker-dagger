@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# What traged-deploy.service actually runs: pull the current TrageD server image
+# What trageyd-deploy.service actually runs: pull the current TrageyD server image
 # and restart only that service.
 #
 # It exists as a script rather than two ExecStart lines so that an expired
@@ -22,7 +22,7 @@ if ! docker compose pull td-server 2>&1 | tee "$log"; then
     cat >&2 <<'INSTRUCTIONS'
 
 ──────────────────────────────────────────────────────────────────────
-The registry rejected us. The TrageD image is private, so this is almost
+The registry rejected us. The TrageyD image is private, so this is almost
 certainly the read:packages token having expired or been revoked.
 
 To rotate it:
@@ -32,11 +32,11 @@ To rotate it:
      Give it a long expiry and a name like "dagger ghcr pull".
 
   2. Install it on this host (reads the token from stdin, writes it
-     root-only to /etc/traged/docker/config.json):
+     root-only to /etc/trageyd/docker/config.json):
 
-       cd /home/media && printf '%s' '<TOKEN>' | sudo ./traged/set-registry-token
+       cd /home/media && printf '%s' '<TOKEN>' | sudo ./trageyd/set-registry-token
 
-  3. Update the 1Password item "TrageD GHCR pull token (dagger)" in the
+  3. Update the 1Password item "TrageyD GHCR pull token (dagger)" in the
      Private vault, including the new expiry date in its notes.
 
   4. Re-run the deploy:  gh workflow run deploy   (from a td checkout)

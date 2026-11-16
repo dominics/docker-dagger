@@ -6,11 +6,11 @@
 # dressed up, and this unit runs as root. What is bounded is the *command* — a
 # fixed ExecStart the deploy account cannot influence, touching only td-server —
 # rather than the user it runs as. sudoers grants exactly
-# `systemctl start --wait traged-deploy.service`, with no argument to bend.
+# `systemctl start --wait trageyd-deploy.service`, with no argument to bend.
 #
-# Installed by traged/install-deploy-account (run from deploy-dagger).
+# Installed by trageyd/install-deploy-account (run from deploy-dagger).
 [Unit]
-Description=Pull the current TrageD server image and restart it
+Description=Pull the current TrageyD server image and restart it
 After=docker.service
 Requires=docker.service
 
@@ -22,6 +22,6 @@ Environment=STORAGE_DIR=/media/storage
 # The image is private, so the pull needs a credential. Its own config dir
 # rather than /root/.docker: scoped to this deploy, and not picked up by
 # anything else that happens to run as root. Populated by
-# traged/set-registry-token.
-Environment=DOCKER_CONFIG=/etc/traged/docker
-ExecStart=/usr/local/bin/traged-pull
+# trageyd/set-registry-token.
+Environment=DOCKER_CONFIG=/etc/trageyd/docker
+ExecStart=/usr/local/bin/trageyd-pull
