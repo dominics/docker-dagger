@@ -44,7 +44,23 @@ http:
       tls:
         certResolver: letsencrypt-dns
 
+    # Public: the MCP server Gemini calls to print recipes on the kitchen receipt printer. It runs on the
+    # host from the daily-slip repo (`daily-slip serve`), not in this stack, because it needs the printer
+    # on the LAN. Only /mcp/ is routed; the server answers a long secret path under it and 404s the rest.
+    kitchen:
+      rule: "Host(`kitchen.varspool.com`) && PathPrefix(`/mcp/`)"
+      service: kitchen
+      entryPoints:
+        - websecure
+      tls:
+        certResolver: letsencrypt
+
   services:
+    kitchen:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.1.200:8790"
+
     cdn-station:
       loadBalancer:
         servers:
